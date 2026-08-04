@@ -1,0 +1,139 @@
+.history-page {
+  min-height: 100vh;
+  background: var(--parchment);
+  padding-bottom: 48px;
+}
+
+.search-box {
+  margin: 32px 40px 16px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 20px 28px;
+  background: var(--card);
+  border-radius: 24px;
+  border: 1.5px solid rgba(124, 92, 252, 0.1);
+}
+
+.search-icon {
+  font-size: 32px;
+  flex-shrink: 0;
+}
+
+.search-input {
+  flex: 1;
+  font-size: 28px;
+  color: var(--ink);
+}
+
+.empty-state {
+  text-align: center;
+  padding: 120px 40px;
+}
+
+.empty-icon {
+  font-size: 96px;
+  display: block;
+  margin-bottom: 24px;
+}
+
+.empty-title {
+  display: block;
+  font-size: 30px;
+  font-weight: 700;
+  margin-bottom: 8px;
+  color: var(--ink);
+}
+
+.empty-sub {
+  display: block;
+  font-size: 26px;
+  color: var(--ink-light);
+}
+
+.date-header {
+  display: block;
+  padding: 24px 40px 12px;
+  font-size: 24px;
+  color: var(--ink-light);
+  font-weight: 500;
+}
+
+.history-card {
+  margin: 0 40px 20px;
+  padding: 28px;
+  background: var(--card);
+  border-radius: var(--radius-card);
+  border: 1.5px solid rgba(124, 92, 252, 0.06);
+}
+
+.card-top {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 12px;
+}
+
+.card-trophy {
+  font-size: 36px;
+}
+
+.card-topic {
+  font-size: 30px;
+  font-weight: 700;
+  flex: 1;
+  color: var(--ink);
+}
+
+.card-accuracy {
+  font-size: 30px;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.card-stats {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  margin-bottom: 20px;
+}
+
+.stat {
+  font-size: 24px;
+  color: var(--ink-light);
+}
+
+.card-divider {
+  height: 1px;
+  background: rgba(61, 44, 94, 0.06);
+  margin-bottom: 20px;
+}
+
+.card-actions {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+}
+
+.action-text {
+  font-size: 26px;
+  color: var(--spell);
+  font-weight: 500;
+}
+
+.delete-text {
+  margin-left: auto;
+  font-size: 24px;
+  color: var(--ink-light);
+}
+
+.clear-btn {
+  margin: 32px 40px;
+  padding: 20px;
+  text-align: center;
+}
+
+.clear-text {
+  font-size: 26px;
+  color: var(--ink-light);
+}

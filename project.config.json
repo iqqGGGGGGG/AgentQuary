@@ -1,0 +1,19 @@
+{
+  "miniprogramRoot": "dist/weapp/",
+  "projectname": "agent-quary",
+  "description": "AI Quiz Challenge",
+  "appid": "wx236069d1e362607d",
+  "setting": {
+    "urlCheck": false,
+    "es6": false,
+    "enhance": false,
+    "compileHotReLoad": false,
+    "postcss": true,
+    "minified": false,
+    "nodeModules": false,
+    "autoAudits": false,
+    "minifyWXSS": false
+  },
+  "compileType": "miniprogram",
+  "condition": {}
+}

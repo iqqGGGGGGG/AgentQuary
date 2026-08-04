@@ -1,0 +1,42 @@
+.result-card {
+  background: linear-gradient(145deg, #F8F4FF, #FFF8F0);
+  border-radius: 40px;
+  padding: 56px 48px;
+  text-align: center;
+  border: 1.5px solid rgba(124, 92, 252, 0.1);
+  box-shadow: 0 16px 64px rgba(61, 44, 94, 0.1);
+}
+
+.result-topic {
+  display: block;
+  font-size: 40px;
+  font-weight: 700;
+  color: #3D2C5E;
+  margin-bottom: 16px;
+}
+
+.result-accuracy {
+  display: block;
+  font-size: 96px;
+  font-weight: 700;
+  color: #7C5CFC;
+  line-height: 1;
+}
+
+.result-label {
+  display: block;
+  font-size: 26px;
+  color: #8B7FA3;
+  margin-bottom: 32px;
+}
+
+.result-stats {
+  display: flex;
+  justify-content: center;
+  gap: 40px;
+}
+
+.stat {
+  font-size: 26px;
+  color: #8B7FA3;
+}

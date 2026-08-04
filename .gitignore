@@ -1,0 +1,29 @@
+# JavaScript dependencies and build outputs
+node_modules/
+dist/
+.swc/
+
+# Python environments and caches
+server/.venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+
+# Secrets and local environment files
+.env
+.env.*
+!.env.example
+server/.env
+server/.env.*
+!server/.env.example
+
+# Local editor and tool state
+.vscode/
+.kilo/
+project.private.config.json
+
+# Runtime and OS artifacts
+*.log
+.DS_Store
+Thumbs.db
+
