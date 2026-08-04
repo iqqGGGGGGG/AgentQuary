@@ -103,6 +103,17 @@ body::after {
   pointer-events: none;
   z-index: 0;
 }
+.phone-scroll::after {
+  content: '';
+  position: absolute;
+  left: 36px;
+  top: 0;
+  bottom: 0;
+  width: 1px;
+  background: repeating-linear-gradient(180deg, transparent, transparent 31px, rgba(124,92,252,0.07) 31px, rgba(124,92,252,0.07) 32px);
+  pointer-events: none;
+  z-index: 0;
+}
 .phone-scroll > * { position: relative; z-index: 1; }
 /* ── Navbar ── */
 .navbar {
@@ -570,9 +581,51 @@ body::after {
 }
 .tab-item.active { color: var(--spell); }
 .tab-icon { height: 20px; display: flex; align-items: center; justify-content: center; }
-/* ── Responsive ── */
-@media (max-width: 1200px) { body { gap: 24px; } .phone-frame { width: 340px; height: 600px; } }
-@media (max-width: 768px) { body { flex-direction: column; align-items: center; gap: 20px; padding: 16px 8px; } .phone-frame { width: 100%; max-width: 375px; height: 667px; } }
+/* ── Notebook Margin Annotation ── */
+.topic-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  opacity: 1;
+}
+.home-screen .topic-card::before { height: 3px; }
+/* ── Notebook Torn-Edge Effect for Cards ── */
+.history-card, .topic-card {
+  position: relative;
+}
+.history-card::after, .topic-card::after {
+  content: '';
+  position: absolute;
+  width: 60px;
+  height: 60px;
+  right: -28px;
+  bottom: -33px;
+  border-radius: 50%;
+  background: rgba(124,92,252,0.035);
+  pointer-events: none;
+}
+/* ── Section Chapter Markers ── */
+.section-header::before {
+  flex: 0 0 14px;
+  height: 3px;
+  border-radius: 6px;
+  background: linear-gradient(90deg, var(--spell), var(--ember));
+}
+.section-header::after {
+  background: linear-gradient(90deg, rgba(124,92,252,0.18), transparent);
+}
+/* ── Responsive: phone frame size is fixed, only body wrapping changes ── */
+@media (max-width: 768px) {
+  body {
+    flex-direction: column;
+    align-items: center;
+    gap: 20px;
+    padding: 16px 8px;
+  }
+}
 </style>
 </head>
 <body>
@@ -607,6 +660,8 @@ body::after {
     <symbol id="ic-document" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/></symbol>
     <symbol id="ic-lucide-star" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></symbol>
     <symbol id="ic-notebook" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 6h4"/><path d="M2 10h4"/><path d="M2 14h4"/><path d="M2 18h4"/><rect width="16" height="20" x="4" y="2" rx="2"/><path d="M9.5 8h5"/><path d="M9.5 12H16"/><path d="M9.5 16H14"/></symbol>
+    <symbol id="ic-user" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></symbol>
+    <symbol id="ic-fire" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/></symbol>
     <!-- Decorative: floating book -->
     <symbol id="deco-book" viewBox="0 0 48 48" fill="none"><rect x="8" y="6" width="32" height="36" rx="3" fill="var(--spell-glow)" opacity="0.15"/><rect x="10" y="8" width="28" height="32" rx="2" fill="var(--spell)" opacity="0.08"/><path d="M24 8v32" stroke="var(--spell)" stroke-width="1.5" opacity="0.2"/><path d="M16 16h8M16 22h12M16 28h10" stroke="var(--spell)" stroke-width="1" opacity="0.15" stroke-linecap="round"/></symbol>
     <!-- Decorative: floating star cluster -->
@@ -745,6 +800,86 @@ body::after {
     <div class="tab-item">
       <span class="tab-icon"><svg class="ic ic-lg" style="color:inherit"><use href="#ic-history"/></svg></span>
       记录
+    </div>
+    <div class="tab-item">
+      <span class="tab-icon"><svg class="ic ic-lg" style="color:inherit"><use href="#ic-user"/></svg></span>
+      我的
+    </div>
+  </div>
+</section>
+
+<!-- ════════════════════════════════════════════ -->
+<!-- Screen 7: 我的 -->
+<!-- ════════════════════════════════════════════ -->
+<section class="phone-frame">
+  <div class="screen-label">屏 7 · 我的</div>
+  <div class="phone-scroll">
+    <!-- Profile Header -->
+    <div style="background:linear-gradient(135deg,var(--spell),var(--spell-glow)); padding:36px 20px 28px; border-radius:0 0 24px 24px; text-align:center;">
+      <div style="width:72px;height:72px;border-radius:50%;border:3px solid rgba(255,255,255,0.4);margin:0 auto 12px;background:rgba(255,255,255,0.15);display:flex;align-items:center;justify-content:center;">
+        <svg class="ic ic-lg" style="color:#fff;width:40px;height:40px;"><use href="#ic-user"/></svg>
+      </div>
+      <div style="font-size:20px;font-weight:700;color:#fff;margin-bottom:3px;">知识探索者</div>
+      <div style="font-size:12px;color:rgba(255,255,255,0.7);">点击头像可更换</div>
+    </div>
+
+    <!-- Stats Grid -->
+    <div style="padding:16px 20px 0;">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+        <div class="topic-card" style="text-align:center;padding:16px 10px;transform:none;cursor:default;">
+          <div style="font-family:var(--font-display);font-size:28px;color:var(--spell);margin-bottom:3px;">12</div>
+          <div style="font-size:12px;color:var(--ink-light);">答题次数</div>
+        </div>
+        <div class="topic-card" style="text-align:center;padding:16px 10px;transform:none;cursor:default;">
+          <div style="font-family:var(--font-display);font-size:28px;color:var(--spell);margin-bottom:3px;">108</div>
+          <div style="font-size:12px;color:var(--ink-light);">答题总数</div>
+        </div>
+        <div class="topic-card" style="text-align:center;padding:16px 10px;transform:none;cursor:default;">
+          <div style="font-family:var(--font-display);font-size:28px;color:var(--spell);margin-bottom:3px;">78%</div>
+          <div style="font-size:12px;color:var(--ink-light);">平均正确率</div>
+        </div>
+        <div class="topic-card" style="text-align:center;padding:16px 10px;transform:none;cursor:default;">
+          <div style="font-family:var(--font-display);font-size:28px;color:var(--spell);margin-bottom:3px;">5</div>
+          <div style="font-size:12px;color:var(--ink-light);">学习天数</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Best Streak -->
+    <div style="margin:12px 20px 0;padding:14px 16px;display:flex;align-items:center;gap:12px;background:rgba(255,140,66,0.08);border:1.5px solid rgba(255,140,66,0.15);border-radius:var(--radius-card);">
+      <svg class="ic ic-lg" style="color:var(--ember);width:28px;height:28px;"><use href="#ic-fire"/></svg>
+      <div style="flex:1;">
+        <div style="font-size:13px;color:var(--ink);font-weight:500;">最佳连对纪录</div>
+        <div style="font-size:15px;color:var(--ember);font-weight:700;margin-top:2px;">连续答对 7 题</div>
+      </div>
+    </div>
+
+    <!-- Menu Items -->
+    <div style="margin:16px 20px 0;background:var(--card);border-radius:var(--radius-card);overflow:hidden;border:1.5px solid rgba(124,92,252,0.06);">
+      <div style="display:flex;align-items:center;gap:12px;padding:16px;border-bottom:1px solid rgba(61,44,94,0.04);cursor:pointer;">
+        <svg class="ic ic-md" style="color:var(--ink-light);"><use href="#ic-history"/></svg>
+        <span style="flex:1;font-size:14px;color:var(--ink);">学习记录</span>
+        <svg class="ic ic-sm" style="color:var(--ink-light);"><use href="#ic-chevron-right"/></svg>
+      </div>
+      <div style="display:flex;align-items:center;gap:12px;padding:16px;cursor:pointer;">
+        <svg class="ic ic-md" style="color:var(--ink-light);"><use href="#ic-lightbulb"/></svg>
+        <span style="flex:1;font-size:14px;color:var(--ink);">关于</span>
+        <svg class="ic ic-sm" style="color:var(--ink-light);"><use href="#ic-chevron-right"/></svg>
+      </div>
+    </div>
+  </div>
+  <div class="bottom-tab">
+    <div class="tab-item">
+      <span class="tab-icon"><svg class="ic ic-lg" style="color:inherit"><use href="#ic-home"/></svg></span>
+      首页
+    </div>
+    <div class="tab-item">
+      <span class="tab-icon"><svg class="ic ic-lg" style="color:inherit"><use href="#ic-history"/></svg></span>
+      记录
+    </div>
+    <div class="tab-item active">
+      <span class="tab-icon"><svg class="ic ic-lg" style="color:inherit"><use href="#ic-user"/></svg></span>
+      我的
     </div>
   </div>
 </section>
@@ -1218,6 +1353,10 @@ body::after {
     <div class="tab-item active">
       <span class="tab-icon"><svg class="ic ic-lg" style="color:inherit"><use href="#ic-history"/></svg></span>
       记录
+    </div>
+    <div class="tab-item">
+      <span class="tab-icon"><svg class="ic ic-lg" style="color:inherit"><use href="#ic-user"/></svg></span>
+      我的
     </div>
   </div>
 </section>

@@ -18,7 +18,7 @@
 | 请求库 | **Taro.request** | 框架内置，无需额外依赖 |
 | 构建工具 | **Taro CLI (Webpack 5)** | `taro build --type weapp`，Taro CLI 内置 Webpack |
 | 样式方案 | **SCSS** | NutUI 主题变量 + 自定义样式 |
-| 存储 (MVP) | **Taro.setStorageSync** | 无后端数据库依赖 |
+| 存储 | **MySQL + Taro.setStorageSync** | 登录用户云端 MySQL，未登录本地缓存 |
 | IDE | **VS Code + 微信开发者工具** | VS Code 写代码，微信开发者工具预览调试 |
 
 ### 后端技术栈
@@ -29,6 +29,8 @@
 | AI 编排 | **LangChain** | PromptTemplate + JsonOutputParser + Pydantic 自动校验 |
 | AI 模型 | **小米 MiMo 2.5 Pro** | `https://token-plan-cn.xiaomimimo.com/v1/chat/completions`, model: `mimo-2.5-pro` |
 | 配置管理 | **pydantic-settings** | 类型安全的环境变量管理，替代 python-dotenv |
+| 数据库 | **MySQL 8.0+** | 关系型数据存储，aiomysql 异步驱动 |
+| ORM | **SQLAlchemy 2.0 (async)** | Mapped 类型注解 + async_sessionmaker |
 | 服务器 | **uvicorn** | ASGI 服务器，开发用 `--reload` 热重载 |
 | 测试 | **pytest + pytest-asyncio + httpx** | pytest 跑测试，httpx.AsyncClient 测试 FastAPI 路由 |
 | 日志 | **Python logging** | 内置模块，配置 JSON 格式输出 |
@@ -45,28 +47,30 @@
 │  src/pages/history → 学习记录列表          │
 │                                          │
 │  状态: React useState/useContext          │
-│  存储: Taro.setStorageSync                │
+│  存储: 登录→MySQL云端  未登录→本地缓存     │
 └─────────────┬────────────────────────────┘
               │ Taro.request (HTTPS)
               ▼
 ┌──────────────────────────────────────────┐
-│    FastAPI + LangChain 后端 (无状态)       │
+│    FastAPI + LangChain 后端               │
 │                                          │
-│  POST /api/generate  → chain_generate    │
-│  POST /api/report    → chain_report      │
-│  GET  /api/examples  → 返回示例主题       │
+│  POST /api/login    → 微信登录/注册       │
+│  POST /api/generate → chain_generate     │
+│  POST /api/report   → chain_report       │
+│  GET  /api/examples → 返回示例主题        │
+│  /api/user/*        → 用户资料/历史记录   │
 │                                          │
 │  LangChain: PromptTemplate + JsonParser  │
-│  无 session，无数据库                      │
-└─────────────┬────────────────────────────┘
-              │ ChatOpenAI (OpenAI 兼容)
-              ▼
-┌──────────────────────────────────────────┐
-│      MiMo 2.5 Pro API (小米官方)          │
-│      https://token-plan-cn.xiaomimimo.com│
-│      /v1/chat/completions                │
-│      model: mimo-2.5-pro                 │
-└──────────────────────────────────────────┘
+│  MySQL: 用户 + 学习记录持久化             │
+└──────┬──────────────────┬────────────────┘
+       │                  │
+       ▼                  ▼
+┌─────────────┐  ┌────────────────────────┐
+│ MySQL 8.0+  │  │  MiMo 2.5 Pro API     │
+│ aiomysql    │  │  (小米官方)            │
+│ users表     │  │  model: mimo-2.5-pro   │
+│ records表   │  └────────────────────────┘
+└─────────────┘
 ```
 
 ## 3. 前端项目结构 (Taro 4.x)
@@ -220,6 +224,7 @@ export interface ExampleTopic {
 
 // 历史记录条目
 export interface HistoryItem {
+  id?: number              // 云端记录 ID（登录后有）
   session_id: string
   topic: string
   timestamp: number
@@ -227,6 +232,37 @@ export interface HistoryItem {
   total_questions: number
   correct_count: number
   duration_seconds: number
+  summary?: string
+}
+
+// 登录请求
+export interface LoginRequest {
+  code: string
+}
+
+// 登录响应
+export interface LoginResponse {
+  openid: string
+  nickname: string
+  avatar_url?: string
+  is_new: boolean
+}
+
+// 用户资料
+export interface UserProfile {
+  openid: string
+  nickname: string
+  avatar_url?: string
+  created_at: string
+}
+
+// 用户统计
+export interface UserStats {
+  total_quizzes: number
+  total_questions: number
+  avg_accuracy: number
+  best_streak: number
+  learning_days: number
 }
 ```
 
@@ -303,7 +339,8 @@ class ReportResponse(BaseModel):
 | 当前题目 | `app.ts` globalData + 页面间跳转传参 | 单次学习 |
 | 答题状态 | quiz 页面 `useState` | 页面内 |
 | 答题结果 | `app.ts` globalData | quiz → report 传递 |
-| 历史记录 | `Taro.setStorageSync` | 永久 |
+| 历史记录 | 登录→MySQL云端 / 未登录→`Taro.setStorageSync` | 永久 |
+| 用户信息 | 登录后缓存 openid + 本地存储 | 永久 |
 | 示例主题 | index 页面 `useState` | 页面内 |
 
 ### 6.2 路由配置 (app.config.ts)
@@ -329,17 +366,22 @@ export default defineAppConfig({
 
 ```typescript
 import Taro from '@tarojs/taro'
-import type { GenerateRequest, GenerateResponse, ReportRequest, ReportResponse, ExampleTopic } from '../types/quiz'
+import type { GenerateRequest, GenerateResponse, ReportRequest, ReportResponse, ExampleTopic, LoginResponse, UserProfile, UserStats, HistoryItem } from '../types/quiz'
+import { getOpenid } from '../utils/auth'
 
 const BASE_URL = 'http://localhost:8000'  // 开发时，生产环境通过 config 切换
 
-function request<T>(method: 'GET' | 'POST', path: string, data?: any): Promise<T> {
+function request<T>(method: 'GET' | 'POST' | 'PUT' | 'DELETE', path: string, data?: any): Promise<T> {
+  const openid = getOpenid()
   return new Promise((resolve, reject) => {
     Taro.request({
       url: `${BASE_URL}${path}`,
       method,
       data,
-      header: { 'Content-Type': 'application/json' },
+      header: {
+        'Content-Type': 'application/json',
+        ...(openid ? { 'X-User-Openid': openid } : {}),
+      },
       timeout: 90000,
       success(res) {
         if (res.statusCode >= 200 && res.statusCode < 300) {
@@ -356,6 +398,7 @@ function request<T>(method: 'GET' | 'POST', path: string, data?: any): Promise<T
 }
 
 export const api = {
+  // 核心功能
   generate: (content: string, count = 10) =>
     request<GenerateResponse>('POST', '/api/generate', { content, question_count: count }),
 
@@ -364,14 +407,39 @@ export const api = {
 
   examples: () =>
     request<{ examples: ExampleTopic[] }>('GET', '/api/examples'),
+
+  // 用户系统
+  login: (code: string) =>
+    request<LoginResponse>('POST', '/api/login', { code }),
+
+  getProfile: () =>
+    request<UserProfile>('GET', '/api/user/profile'),
+
+  updateProfile: (data: { nickname?: string; avatar_url?: string }) =>
+    request<UserProfile>('PUT', '/api/user/profile', data),
+
+  getStats: () =>
+    request<UserStats>('GET', '/api/user/stats'),
+
+  saveHistory: (data: any) =>
+    request<HistoryItem>('POST', '/api/user/history', data),
+
+  getHistory: () =>
+    request<{ items: HistoryItem[]; total: number }>('GET', '/api/user/history'),
+
+  deleteHistory: (id: number) =>
+    request<{ detail: string }>('DELETE', `/api/user/history/${id}`),
 }
 ```
 
 ### 6.4 本地存储封装 (src/utils/storage.ts)
 
+未登录用户的学习记录仍使用本地缓存，登录后自动切换为云端 MySQL。
+
 ```typescript
 import Taro from '@tarojs/taro'
 import type { HistoryItem } from '../types/quiz'
+import { getOpenid } from './auth'
 
 const HISTORY_KEY = 'learning_history'
 const MAX_HISTORY = 50
@@ -396,6 +464,8 @@ export function clearHistory(): void {
   Taro.removeStorageSync(HISTORY_KEY)
 }
 ```
+
+**登录用户**的历史记录通过 `api.saveHistory()` 和 `api.getHistory()` 操作云端 MySQL，不再写入本地存储。
 
 ### 6.5 globalData 管理 (src/app.ts)
 
@@ -485,8 +555,10 @@ Prompt 以 `ChatPromptTemplate` 形式定义在 chain 文件中。`JsonOutputPar
 
 ```
 server/
-├── main.py                  # FastAPI 入口 + CORS + logging 配置
-├── config.py                # pydantic-settings 配置
+├── main.py                  # FastAPI 入口 + CORS + logging 配置 + lifespan init_db
+├── config.py                # pydantic-settings 配置 (AI + MySQL + 微信)
+├── database.py              # SQLAlchemy async engine + session + init_db
+├── auth.py                  # get_current_user 鉴权依赖
 ├── requirements.txt
 ├── requirements-dev.txt     # 开发依赖 (pytest 等)
 ├── .env / .env.example
@@ -494,7 +566,9 @@ server/
 │   ├── __init__.py
 │   ├── generate.py          # POST /api/generate
 │   ├── report.py            # POST /api/report
-│   └── examples.py          # GET /api/examples
+│   ├── examples.py          # GET /api/examples
+│   ├── auth.py              # POST /api/login (微信登录)
+│   └── user.py              # 用户资料 + 统计 + 学习记录 CRUD
 ├── chains/                  # LangChain chains
 │   ├── __init__.py
 │   ├── llm.py               # ChatOpenAI 实例
@@ -502,11 +576,18 @@ server/
 │   └── report_chain.py      # 报告生成 chain
 ├── models/
 │   ├── __init__.py
-│   └── schemas.py           # Pydantic 模型
+│   ├── schemas.py           # Pydantic 模型 (含 User/History schemas)
+│   └── orm.py               # SQLAlchemy ORM 模型 (User, LearningRecord)
+├── services/
+│   ├── __init__.py
+│   └── content.py           # 内容处理服务
 └── tests/
-    ├── conftest.py           # pytest fixtures (FastAPI TestClient)
+    ├── conftest.py           # pytest fixtures (FastAPI TestClient + DB session)
     ├── test_generate.py      # /api/generate 测试
-    └── test_report.py        # /api/report 测试
+    ├── test_report.py        # /api/report 测试
+    ├── test_auth.py          # /api/login 测试
+    ├── test_user.py          # /api/user/* 测试
+    └── test_content.py       # 内容处理测试
 ```
 
 **说明**: `prompts/` 目录不再需要。Prompt 模板以 `ChatPromptTemplate` 形式直接定义在 chain 文件中，与输出解析器和模型组成 LCEL chain。
@@ -518,10 +599,24 @@ from pydantic_settings import BaseSettings
 
 class Settings(BaseSettings):
     ai_base_url: str = "https://token-plan-cn.xiaomimimo.com/v1"
-    ai_model: str = "mimo-2.5-pro"
+    ai_model: str = "mimo-v2.5-pro"
     ai_api_key: str
 
+    db_host: str = "localhost"
+    db_port: int = 3306
+    db_user: str = "root"
+    db_password: str = ""
+    db_name: str = "agentquary"
+
+    wx_appid: str = ""
+    wx_secret: str = ""
+    dev_mode: bool = True
+
     model_config = {"env_file": ".env", "env_file_encoding": "utf-8"}
+
+    @property
+    def db_url(self) -> str:
+        return f"mysql+aiomysql://{self.db_user}:{self.db_password}@{self.db_host}:{self.db_port}/{self.db_name}?charset=utf8mb4"
 
 settings = Settings()
 ```
@@ -529,6 +624,14 @@ settings = Settings()
 **`.env.example`**:
 ```
 AI_API_KEY=your-mimo-api-key-here
+DB_HOST=localhost
+DB_PORT=3306
+DB_USER=root
+DB_PASSWORD=
+DB_NAME=agentquary
+WX_APPID=
+WX_SECRET=
+DEV_MODE=true
 ```
 
 **优势**: 类型校验 + 缺少必填字段直接报错 + 自动加载 .env。
@@ -624,6 +727,10 @@ langchain-openai>=0.3.0
 langchain-core>=0.3.0
 pydantic>=2.0
 pydantic-settings>=2.0
+httpx>=0.28.0
+sqlalchemy[asyncio]>=2.0
+aiomysql>=0.2.0
+pymysql>=1.1.0
 ```
 
 **`requirements-dev.txt`** (开发依赖):
@@ -641,7 +748,11 @@ httpx>=0.28.0
 - `pydantic` — 数据校验
 - `pydantic-settings` — 类型安全的环境变量配置 (替代 python-dotenv)
 - `fastapi` + `uvicorn` — Web 框架 + ASGI 服务器
-- `pytest` + `pytest-asyncio` + `httpx` — 测试 (仅开发依赖)
+- `sqlalchemy[asyncio]` — 异步 ORM，MySQL 数据持久化
+- `aiomysql` — MySQL 异步驱动
+- `pymysql` — MySQL 同步驱动（备用）
+- `httpx` — HTTP 客户端（微信登录 + 测试用）
+- `pytest` + `pytest-asyncio` — 测试 (仅开发依赖)
 
 ## 9. 各页面交互流程 (细化)
 
@@ -703,7 +814,9 @@ onLoad:
   → 同时异步调用 api.report(...)
      → 成功: 更新 summary, encouragement
      → 失败: 使用默认文案，不阻断
-  → 保存历史: saveHistory({ session_id, topic, timestamp, accuracy, ... })
+  → 保存历史:
+     → 已登录: api.saveHistory({...}) 写入 MySQL
+     → 未登录: saveHistory({...}) 写入本地缓存
 
 "再来一关":
   → Taro.navigateBack({ url: '/pages/index/index' })  // 回首页重新输入
@@ -730,12 +843,18 @@ onShow:
 ```bash
 cd server
 pip install -r requirements-dev.txt
-cp .env.example .env       # 填入 AI_API_KEY
+cp .env.example .env       # 填入 AI_API_KEY + MySQL 配置
 uvicorn main:app --reload --host 0.0.0.0 --port 8000
+# 启动时自动建表 (init_db)
 # Swagger: http://localhost:8000/docs
 
 # 运行测试
 pytest tests/ -v
+```
+
+**MySQL 准备**:
+```sql
+CREATE DATABASE IF NOT EXISTS agentquary CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 ```
 
 ### 10.2 前端
@@ -817,7 +936,9 @@ npm run dev:weapp
 | 前端请求 | Taro.request | 框架内置，零额外依赖 |
 | UI 库 | NutUI (Taro) | 减少基础组件开发量，风格统一 |
 | AI 编排 | LangChain | PromptTemplate + JsonOutputParser 自动校验重试 |
-| 后端无状态 | 不用 /api/check | 答案客户端本地比对，零 session |
+| 数据库 | MySQL 8.0+ | 关系型数据持久化，生产环境可用，支持并发和远程访问 |
+| ORM | SQLAlchemy 2.0 async | 类型安全，异步兼容 FastAPI，切换数据库只需改连接字符串 |
+| 登录鉴权 | 微信 wx.login + openid | 小程序原生登录，用户无感知，无需额外注册 |
 | 后端配置 | pydantic-settings | 类型安全 + 缺字段报错 + 自动加载 .env |
 | 后端测试 | pytest + pytest-asyncio | Python 标准测试框架，FastAPI 官方推荐 |
 | 后端日志 | Python logging | 零依赖，内置模块 |
@@ -825,7 +946,7 @@ npm run dev:weapp
 | 报告混合 | 本地统计 + AI 写文案 | 统计可靠，AI 只做润色 |
 | 状态管理 | React useState + 模块变量 | MVP 无需 Redux |
 | 报告降级 | 默认文案 | 不因 AI 故障阻断体验 |
-| 存储 | Taro.setStorageSync | 零数据库，快速验证 |
+| 未登录存储 | Taro.setStorageSync | 低门槛体验，登录后迁移云端 |
 
 ## 13. 风险与应对
 
@@ -837,7 +958,8 @@ npm run dev:weapp
 | LangChain 版本兼容 | 低 | 锁定 langchain/langchain-openai/langchain-core 版本 |
 | Taro 4.x 兼容性问题 | 低 | 使用最新 stable 版，参考官方示例 |
 | NutUI 组件与设计稿不匹配 | 中 | 基础组件用 NutUI，自定义区域手写 SCSS |
-| 本地存储容量限制 (10MB) | 低 | 限制 50 条历史记录 |
+| MySQL 连接断开 | 低 | pool_pre_ping=True 自动断线重连 |
+| 微信登录接口异常 | 低 | dev_mode 开关，开发环境跳过微信验证 |
 
 ## 14. 开放问题 (实施时确认)
 

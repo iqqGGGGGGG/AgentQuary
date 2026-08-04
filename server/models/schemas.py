@@ -69,3 +69,65 @@ class QuizOutputSchema(BaseModel):
 class ReportOutputSchema(BaseModel):
     summary: str = Field(min_length=20, max_length=200)
     encouragement: str = Field(min_length=5, max_length=50)
+
+
+# ── User Schemas ──
+
+class LoginRequest(BaseModel):
+    code: str = Field(min_length=1)
+
+
+class LoginResponse(BaseModel):
+    openid: str
+    nickname: str
+    avatar_url: str | None = None
+    is_new: bool = False
+
+
+class UserProfileResponse(BaseModel):
+    openid: str
+    nickname: str
+    avatar_url: str | None = None
+    created_at: str
+
+
+class UserProfileUpdate(BaseModel):
+    nickname: str | None = Field(default=None, max_length=64)
+    avatar_url: str | None = Field(default=None, max_length=512)
+
+
+class UserStatsResponse(BaseModel):
+    total_quizzes: int = 0
+    total_questions: int = 0
+    avg_accuracy: float = 0.0
+    best_streak: int = 0
+    learning_days: int = 0
+
+
+class HistorySaveRequest(BaseModel):
+    session_id: str
+    topic: str
+    accuracy: float = Field(ge=0, le=1)
+    total_questions: int = Field(ge=0)
+    correct_count: int = Field(ge=0)
+    duration_seconds: int = Field(ge=0)
+    questions: list[dict] | None = None
+    user_answers: list[dict] | None = None
+    summary: str | None = None
+
+
+class HistoryItemResponse(BaseModel):
+    id: int
+    session_id: str
+    topic: str
+    accuracy: float
+    total_questions: int
+    correct_count: int
+    duration_seconds: int
+    summary: str | None = None
+    created_at: str
+
+
+class HistoryListResponse(BaseModel):
+    items: list[HistoryItemResponse]
+    total: int

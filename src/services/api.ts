@@ -1,15 +1,31 @@
 import Taro from '@tarojs/taro'
-import type { GenerateResponse, ReportRequest, ReportResponse, ExampleTopic } from '../types/quiz'
+import type {
+  GenerateResponse,
+  ReportRequest,
+  ReportResponse,
+  ExampleTopic,
+  LoginResponse,
+  UserProfile,
+  UserStats,
+  HistoryItem,
+} from '../types/quiz'
+import { getOpenid } from '../store/user'
 
 const BASE_URL = (process.env.TARO_APP_API_BASE_URL || 'http://127.0.0.1:8000').replace(/\/$/, '')
 
-async function request<T>(method: 'GET' | 'POST', path: string, data?: unknown): Promise<T> {
+async function request<T>(method: 'GET' | 'POST' | 'PUT' | 'DELETE', path: string, data?: unknown): Promise<T> {
+  const headers: Record<string, string> = { 'Content-Type': 'application/json' }
+  const openid = getOpenid()
+  if (openid) {
+    headers['X-User-Openid'] = openid
+  }
+
   try {
     const res = await Taro.request({
       url: `${BASE_URL}${path}`,
       method,
       data,
-      header: { 'Content-Type': 'application/json' },
+      header: headers,
       timeout: 150000,
     })
     if (res.statusCode >= 200 && res.statusCode < 300) {
@@ -33,4 +49,35 @@ export const api = {
 
   examples: () =>
     request<{ examples: ExampleTopic[] }>('GET', '/api/examples'),
+
+  login: (code: string) =>
+    request<LoginResponse>('POST', '/api/login', { code }),
+
+  getProfile: () =>
+    request<UserProfile>('GET', '/api/user/profile'),
+
+  updateProfile: (data: { nickname?: string; avatar_url?: string }) =>
+    request<UserProfile>('PUT', '/api/user/profile', data),
+
+  getStats: () =>
+    request<UserStats>('GET', '/api/user/stats'),
+
+  saveHistory: (data: {
+    session_id: string
+    topic: string
+    accuracy: number
+    total_questions: number
+    correct_count: number
+    duration_seconds: number
+    questions?: unknown[]
+    user_answers?: unknown[]
+    summary?: string
+  }) =>
+    request<{ id: number; session_id: string }>('POST', '/api/user/history', data),
+
+  getHistory: () =>
+    request<{ items: HistoryItem[]; total: number }>('GET', '/api/user/history'),
+
+  deleteHistory: (id: number) =>
+    request<{ detail: string }>('DELETE', `/api/user/history/${id}`),
 }

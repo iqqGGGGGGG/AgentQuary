@@ -19,8 +19,6 @@ import searchIcon from '../../assets/ui-icons/search.png'
 import fileIcon from '../../assets/ui-icons/file-text.png'
 import linkIcon from '../../assets/ui-icons/link.png'
 import sparklesIcon from '../../assets/ui-icons/sparkles.png'
-import homeIcon from '../../assets/ui-icons/house.png'
-import recordsIcon from '../../assets/ui-icons/history.png'
 import './index.scss'
 
 const DEFAULT_EXAMPLES: ExampleTopic[] = [
@@ -263,18 +261,6 @@ export default function Index() {
           ))}
         </View>
       )}
-
-      {/* Bottom Tab */}
-      <View className='bottom-tab'>
-        <View className='tab-item tab-active'>
-          <Image className='tab-icon' src={homeIcon} mode='aspectFit' />
-          <Text className='tab-label'>首页</Text>
-        </View>
-        <View className='tab-item' onClick={() => Taro.navigateTo({ url: '/pages/history/history' })}>
-          <Image className='tab-icon' src={recordsIcon} mode='aspectFit' />
-          <Text className='tab-label'>记录</Text>
-        </View>
-      </View>
     </View>
   )
 }

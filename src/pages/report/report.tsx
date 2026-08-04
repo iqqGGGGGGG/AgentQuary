@@ -6,6 +6,7 @@ import { api } from '../../services/api'
 import { clearQuizProgress, getHistory, saveHistory, saveQuizProgress } from '../../utils/storage'
 import { formatDuration, formatAccuracy } from '../../utils/format'
 import type { ReportResponse } from '../../types/quiz'
+import { isLoggedIn } from '../../store/user'
 import knowledgeRobot from '../../assets/mascot/knowledge-robot.png'
 import './report.scss'
 
@@ -49,18 +50,34 @@ export default function Report() {
 
     if (fromHistory) return
 
-    const persistHistory = (summary = '') => saveHistory({
-      session_id: result.session_id,
-      topic: result.topic,
-      timestamp: Date.now(),
-      accuracy: result.accuracy,
-      total_questions: result.total_count,
-      correct_count: result.correct_count,
-      duration_seconds: result.duration_seconds,
-      quiz: { session_id: result.session_id, topic: result.topic, questions: result.questions },
-      result,
-      summary,
-    })
+    const persistHistory = (summary = '') => {
+      saveHistory({
+        session_id: result.session_id,
+        topic: result.topic,
+        timestamp: Date.now(),
+        accuracy: result.accuracy,
+        total_questions: result.total_count,
+        correct_count: result.correct_count,
+        duration_seconds: result.duration_seconds,
+        quiz: { session_id: result.session_id, topic: result.topic, questions: result.questions },
+        result,
+        summary,
+      })
+
+      if (isLoggedIn()) {
+        api.saveHistory({
+          session_id: result.session_id,
+          topic: result.topic,
+          accuracy: result.accuracy,
+          total_questions: result.total_count,
+          correct_count: result.correct_count,
+          duration_seconds: result.duration_seconds,
+          questions: result.questions,
+          user_answers: result.user_answers,
+          summary,
+        }).catch(() => {})
+      }
+    }
     persistHistory()
 
     api.report({

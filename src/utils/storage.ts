@@ -1,5 +1,5 @@
 import Taro from '@tarojs/taro'
-import type { HistoryItem, QuizProgress } from '../types/quiz'
+import type { HistoryItem, QuizProgress, UserStats } from '../types/quiz'
 
 const HISTORY_KEY = 'learning_history'
 const MAX_HISTORY = 50
@@ -46,4 +46,46 @@ export function getHistory(): HistoryItem[] {
 
 export function clearHistory(): void {
   Taro.removeStorageSync(HISTORY_KEY)
+}
+
+export function computeLocalStats(): UserStats {
+  const history = getHistory()
+  if (history.length === 0) {
+    return { total_quizzes: 0, total_questions: 0, avg_accuracy: 0, best_streak: 0, learning_days: 0 }
+  }
+
+  const totalQuizzes = history.length
+  const totalQuestions = history.reduce((sum, item) => sum + item.total_questions, 0)
+  const totalCorrect = history.reduce((sum, item) => sum + item.correct_count, 0)
+  const avgAccuracy = totalQuestions > 0 ? totalCorrect / totalQuestions : 0
+
+  const bestStreak = history.reduce((max, item) => {
+    if (!item.result?.user_answers) return max
+    let streak = 0
+    let best = 0
+    for (const answer of item.result.user_answers) {
+      if (answer.is_correct) {
+        streak++
+        best = Math.max(best, streak)
+      } else {
+        streak = 0
+      }
+    }
+    return Math.max(max, best)
+  }, 0)
+
+  const uniqueDays = new Set(
+    history.map(item => {
+      const d = new Date(item.timestamp)
+      return `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`
+    })
+  )
+
+  return {
+    total_quizzes: totalQuizzes,
+    total_questions: totalQuestions,
+    avg_accuracy: avgAccuracy,
+    best_streak: bestStreak,
+    learning_days: uniqueDays.size,
+  }
 }

@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react'
-import Taro from '@tarojs/taro'
+import { useState } from 'react'
+import Taro, { useDidShow } from '@tarojs/taro'
 import { View, Text, Input } from '@tarojs/components'
 import { clearHistory, clearQuizProgress, deleteHistory, getHistory, saveQuizProgress } from '../../utils/storage'
 import { setCurrentQuiz, setQuizResult } from '../../store/quiz'
@@ -11,9 +11,9 @@ export default function History() {
   const [history, setHistory] = useState<HistoryItem[]>([])
   const [search, setSearch] = useState('')
 
-  useEffect(() => {
+  useDidShow(() => {
     setHistory(getHistory())
-  }, [])
+  })
 
   const filtered = search.trim()
     ? history.filter(h => h.topic.includes(search.trim()))

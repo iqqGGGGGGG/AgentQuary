@@ -85,3 +85,34 @@ export interface QuizProgress {
   streak: number
   start_time: number
 }
+
+// ── User Types ──
+
+export interface LoginResponse {
+  openid: string
+  nickname: string
+  avatar_url: string | null
+  is_new: boolean
+}
+
+export interface UserProfile {
+  openid: string
+  nickname: string
+  avatar_url: string | null
+  created_at: string
+}
+
+export interface UserStats {
+  total_quizzes: number
+  total_questions: number
+  avg_accuracy: number
+  best_streak: number
+  learning_days: number
+}
+
+export interface UserState {
+  openid: string | null
+  nickname: string
+  avatar_url: string | null
+  isLoggedIn: boolean
+}
