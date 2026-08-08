@@ -16,6 +16,8 @@ class Settings(BaseSettings):
     wx_secret: str = ""
 
     dev_mode: bool = True
+    auth_secret: str = ""
+    auth_token_ttl_seconds: int = 7 * 24 * 60 * 60
 
     model_config = {"env_file": ".env", "env_file_encoding": "utf-8"}
 

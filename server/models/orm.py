@@ -1,5 +1,5 @@
 from datetime import datetime
-from sqlalchemy import String, Integer, Float, Text, DateTime, ForeignKey, func
+from sqlalchemy import String, Integer, Float, Text, DateTime, ForeignKey, func, text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from database import Base
 
@@ -11,8 +11,12 @@ class User(Base):
     openid: Mapped[str] = mapped_column(String(128), unique=True, index=True, nullable=False)
     nickname: Mapped[str] = mapped_column(String(64), default="知识探索者")
     avatar_url: Mapped[str | None] = mapped_column(String(512), nullable=True)
-    created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())
-    updated_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now(), onupdate=func.now())
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime, server_default=text("CURRENT_TIMESTAMP")
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime, server_default=text("CURRENT_TIMESTAMP"), onupdate=func.now()
+    )
 
     records: Mapped[list["LearningRecord"]] = relationship(back_populates="user", cascade="all, delete-orphan")
 
@@ -31,6 +35,8 @@ class LearningRecord(Base):
     questions_json: Mapped[str | None] = mapped_column(Text, nullable=True)
     user_answers_json: Mapped[str | None] = mapped_column(Text, nullable=True)
     summary: Mapped[str | None] = mapped_column(Text, nullable=True)
-    created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime, server_default=text("CURRENT_TIMESTAMP")
+    )
 
     user: Mapped["User"] = relationship(back_populates="records")

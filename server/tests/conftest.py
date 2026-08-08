@@ -60,11 +60,13 @@ async def test_user(db_session):
 
 @pytest_asyncio.fixture
 async def auth_client(test_user):
+    from auth import create_access_token
+
     transport = ASGITransport(app=app)
     async with AsyncClient(
         transport=transport,
         base_url="http://test",
-        headers={"X-User-Openid": test_user.openid},
+        headers={"Authorization": f"Bearer {create_access_token(test_user)}"},
     ) as ac:
         yield ac
 

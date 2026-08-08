@@ -12,11 +12,13 @@ function App({ children }: PropsWithChildren) {
           api.login(loginRes.code).then(res => {
             setUserState({
               openid: res.openid,
+              access_token: res.access_token,
               nickname: res.nickname,
               avatar_url: res.avatar_url,
               isLoggedIn: true,
             })
-            Taro.setStorageSync('user_openid', res.openid)
+            Taro.setStorageSync('access_token', res.access_token)
+            Taro.removeStorageSync('user_openid')
           }).catch(err => {
             console.warn('Login failed:', err)
           })

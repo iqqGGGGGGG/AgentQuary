@@ -60,10 +60,13 @@ export default function Profile() {
           api.login(loginRes.code).then(res => {
             setUserState({
               openid: res.openid,
+              access_token: res.access_token,
               nickname: res.nickname,
               avatar_url: res.avatar_url,
               isLoggedIn: true,
             })
+            Taro.setStorageSync('access_token', res.access_token)
+            Taro.removeStorageSync('user_openid')
             setUser(getUserState())
             loadData()
           }).catch(() => {

@@ -9,15 +9,15 @@ import type {
   UserStats,
   HistoryItem,
 } from '../types/quiz'
-import { getOpenid } from '../store/user'
+import { getAccessToken } from '../store/user'
 
 const BASE_URL = (process.env.TARO_APP_API_BASE_URL || 'http://127.0.0.1:8000').replace(/\/$/, '')
 
 async function request<T>(method: 'GET' | 'POST' | 'PUT' | 'DELETE', path: string, data?: unknown): Promise<T> {
   const headers: Record<string, string> = { 'Content-Type': 'application/json' }
-  const openid = getOpenid()
-  if (openid) {
-    headers['X-User-Openid'] = openid
+  const accessToken = getAccessToken()
+  if (accessToken) {
+    headers.Authorization = `Bearer ${accessToken}`
   }
 
   try {

@@ -201,6 +201,7 @@ async def test_delete_history_not_found(auth_client):
 
 @pytest.mark.asyncio
 async def test_delete_history_other_user(test_user, db_session, client):
+    from auth import create_access_token
     from models.orm import User, LearningRecord
     other_user = User(openid="other_user", nickname="其他用户")
     db_session.add(other_user)
@@ -222,7 +223,7 @@ async def test_delete_history_other_user(test_user, db_session, client):
 
     resp = await client.delete(
         f"/api/user/history/{record.id}",
-        headers={"X-User-Openid": test_user.openid},
+        headers={"Authorization": f"Bearer {create_access_token(test_user)}"},
     )
     assert resp.status_code == 404
 

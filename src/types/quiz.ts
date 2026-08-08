@@ -93,6 +93,9 @@ export interface LoginResponse {
   nickname: string
   avatar_url: string | null
   is_new: boolean
+  access_token: string
+  token_type: 'bearer'
+  expires_in: number
 }
 
 export interface UserProfile {
@@ -112,6 +115,7 @@ export interface UserStats {
 
 export interface UserState {
   openid: string | null
+  access_token: string | null
   nickname: string
   avatar_url: string | null
   isLoggedIn: boolean

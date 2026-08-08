@@ -7,6 +7,7 @@ from database import get_db
 from models.orm import User
 from models.schemas import LoginRequest, LoginResponse
 from config import settings
+from auth import create_access_token
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/api", tags=["auth"])
@@ -57,4 +58,6 @@ async def login(req: LoginRequest, db: AsyncSession = Depends(get_db)):
         nickname=user.nickname,
         avatar_url=user.avatar_url,
         is_new=is_new,
+        access_token=create_access_token(user),
+        expires_in=settings.auth_token_ttl_seconds,
     )

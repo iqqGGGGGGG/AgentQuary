@@ -82,6 +82,9 @@ class LoginResponse(BaseModel):
     nickname: str
     avatar_url: str | None = None
     is_new: bool = False
+    access_token: str
+    token_type: str = "bearer"
+    expires_in: int
 
 
 class UserProfileResponse(BaseModel):

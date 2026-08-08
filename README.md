@@ -116,9 +116,11 @@ DB_NAME=agentquary
 WX_APPID=
 WX_SECRET=
 DEV_MODE=true
+AUTH_SECRET=
+AUTH_TOKEN_TTL_SECONDS=604800
 ```
 
-模型地址和模型名可通过 `AI_BASE_URL`、`AI_MODEL` 覆盖；默认值见 `server/config.py`。生产或真机微信登录时必须配置 `WX_APPID`、`WX_SECRET` 并设置 `DEV_MODE=false`。
+模型地址和模型名可通过 `AI_BASE_URL`、`AI_MODEL` 覆盖；默认值见 `server/config.py`。生产或真机微信登录时必须配置 `WX_APPID`、`WX_SECRET`、至少 32 字节的随机 `AUTH_SECRET`，并设置 `DEV_MODE=false`。开发模式未配置 `AUTH_SECRET` 时会使用仅限本机调试的固定密钥。
 
 ```powershell
 cd server
@@ -181,19 +183,19 @@ npm run preview:h5
 | `GET/POST` | `/api/user/history` | 查询或保存云端学习记录 |
 | `DELETE` | `/api/user/history/{record_id}` | 删除指定云端记录 |
 
-具体请求和响应结构以后端 Swagger 为准。
+具体请求和响应结构以后端 Swagger 为准。`/api/login` 会返回短期签名凭证；访问用户接口时需发送 `Authorization: Bearer <access_token>`。
 
 ## 当前验证状态
 
 - TypeScript 类型检查通过。
 - 微信小程序构建通过。
 - H5 构建通过。
-- 后端自动化测试：`35 passed`。
+- 后端自动化测试：`43 passed`。
 - TabBar 六张 PNG 已验证为 81×81 透明资源，并正确复制到微信构建产物。
 
 ## 已知限制
 
-- `X-User-Openid` 当前只是开发期身份传递，客户端可以伪造；生产环境必须改为服务端签发并验证的会话或令牌。
+- 当前 Bearer 凭证在到期前不可主动撤销；若需要强制下线、设备管理或密钥轮换，应增加服务端会话版本或撤销列表。
 - 个人中心选择的头像目前保存的是小程序临时文件路径，尚未接入对象存储，不保证跨会话或跨设备可用。
 - 登录后会把新学习记录写入数据库，但记录页仍以本地历史为主，尚未实现完整的跨设备拉取、合并与冲突处理。
 - 数据库使用 `create_all` 初始化，尚未接入 Alembic 等正式迁移机制。
@@ -209,7 +211,7 @@ npm run preview:h5
 
 - 不要提交根目录 `.env`、`server/.env` 或任何真实 API Key、微信 Secret、数据库密码。
 - 仓库通过 `.gitignore` 排除本地密钥、虚拟环境、依赖目录和构建产物。
-- 正式部署前仍需补充可靠鉴权、限流、日志脱敏、出站网络策略、数据库迁移和生产级 CORS 配置。
+- 正式部署前仍需补充登录限流、日志脱敏、出站网络策略、数据库迁移和生产级 CORS 配置。
 
 ## 素材许可
 
