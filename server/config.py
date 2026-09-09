@@ -23,6 +23,11 @@ class Settings(BaseSettings):
     tavily_api_key: str = ""
     search_timeout: int = 15
 
+    chroma_persist_dir: str = "./chroma_data"
+    embedding_base_url: str = "https://dashscope.aliyuncs.com/compatible-mode/v1"
+    embedding_model: str = "text-embedding-v4"
+    embedding_api_key: str = ""
+
     model_config = {"env_file": ".env", "env_file_encoding": "utf-8"}
 
     @property

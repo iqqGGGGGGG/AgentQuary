@@ -17,6 +17,8 @@ import type {
   PreferencesData,
   GoalData,
   HistorySaveResult,
+  Document,
+  DocumentListResponse,
 } from '../types/quiz'
 import { getAccessToken } from '../store/user'
 
@@ -132,4 +134,46 @@ export const api = {
 
   updateGoal: (dailyGoal: number) =>
     request<GoalData>('PUT', '/api/user/goal', { daily_goal: dailyGoal }),
+
+  // ── Document API ──
+
+  uploadDocument: (filePath: string, fileName: string): Promise<Document> => {
+    const accessToken = getAccessToken()
+    return new Promise((resolve, reject) => {
+      Taro.uploadFile({
+        url: `${BASE_URL}/api/documents/upload`,
+        filePath,
+        name: 'file',
+        header: {
+          ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
+        },
+        success(res) {
+          if (res.statusCode >= 200 && res.statusCode < 300) {
+            resolve(JSON.parse(res.data) as Document)
+          } else {
+            const data = JSON.parse(res.data || '{}')
+            reject(new Error(data.detail || `上传失败 (${res.statusCode})`))
+          }
+        },
+        fail() {
+          reject(new Error('上传失败，请检查网络连接'))
+        },
+      })
+    })
+  },
+
+  getDocuments: () =>
+    request<DocumentListResponse>('GET', '/api/documents'),
+
+  getDocument: (id: number) =>
+    request<Document>('GET', `/api/documents/${id}`),
+
+  deleteDocument: (id: number) =>
+    request<{ detail: string }>('DELETE', `/api/documents/${id}`),
+
+  getDocumentText: (id: number) =>
+    request<{ id: number; original_filename: string; text_content: string; text_length: number }>('GET', `/api/documents/${id}/text`),
+
+  clearDocuments: () =>
+    request<{ detail: string }>('DELETE', '/api/documents'),
 }

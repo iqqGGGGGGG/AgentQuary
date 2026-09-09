@@ -246,3 +246,21 @@ export interface HistorySaveResult {
   new_level: number | null
   new_achievements: Achievement[]
 }
+
+// ── Document Types ──
+
+export interface Document {
+  id: number
+  filename: string
+  original_filename: string
+  file_type: string
+  file_size: number
+  text_length: number
+  created_at: string
+  text_preview?: string | null
+}
+
+export interface DocumentListResponse {
+  items: Document[]
+  total: number
+}

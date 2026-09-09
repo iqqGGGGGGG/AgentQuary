@@ -760,6 +760,118 @@
   flex-shrink: 0;
 }
 
+// ── Knowledge Base ──
+
+.kb-card {
+  margin: 28px 40px 0;
+  padding: 24px;
+  background: var(--card);
+  border: 1.5px solid rgba(124, 92, 252, 0.06);
+  border-radius: var(--radius-card);
+  overflow: hidden;
+}
+
+.kb-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.kb-title {
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--ink);
+}
+
+.kb-count {
+  font-size: 22px;
+  color: var(--ink-light);
+}
+
+.kb-upload {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 20px;
+  background: rgba(124, 92, 252, 0.06);
+  border: 2px dashed rgba(124, 92, 252, 0.2);
+  border-radius: 16px;
+  margin-bottom: 16px;
+
+  &:active {
+    background: rgba(124, 92, 252, 0.1);
+  }
+}
+
+.kb-upload-icon {
+  font-size: 32px;
+}
+
+.kb-upload-text {
+  font-size: 26px;
+  color: var(--spell);
+  font-weight: 600;
+}
+
+.kb-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.kb-doc {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px;
+  background: rgba(61, 44, 94, 0.02);
+  border-radius: 12px;
+}
+
+.kb-doc-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.kb-doc-name {
+  display: block;
+  font-size: 26px;
+  color: var(--ink);
+  font-weight: 500;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.kb-doc-meta {
+  display: block;
+  font-size: 20px;
+  color: var(--ink-light);
+  margin-top: 4px;
+}
+
+.kb-doc-actions {
+  display: flex;
+  gap: 16px;
+  flex-shrink: 0;
+  margin-left: 12px;
+}
+
+.kb-action {
+  font-size: 22px;
+  font-weight: 500;
+}
+
+.kb-action-primary {
+  color: var(--spell);
+}
+
+.kb-action-danger {
+  color: var(--wrong);
+}
+
 // ── Menu ──
 
 .menu-section {

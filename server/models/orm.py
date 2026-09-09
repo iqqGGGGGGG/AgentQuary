@@ -73,3 +73,21 @@ class LearningRecord(Base):
     )
 
     user: Mapped["User"] = relationship(back_populates="records")
+
+
+class Document(Base):
+    __tablename__ = "documents"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    user_id: Mapped[int] = mapped_column(Integer, ForeignKey("users.id"), nullable=False, index=True)
+    filename: Mapped[str] = mapped_column(String(256), nullable=False)
+    original_filename: Mapped[str] = mapped_column(String(256), nullable=False)
+    file_type: Mapped[str] = mapped_column(String(16), nullable=False)
+    file_size: Mapped[int] = mapped_column(Integer, default=0)
+    text_content: Mapped[str | None] = mapped_column(Text, nullable=True)
+    text_length: Mapped[int] = mapped_column(Integer, default=0)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime, server_default=text("CURRENT_TIMESTAMP")
+    )
+
+    user: Mapped["User"] = relationship()

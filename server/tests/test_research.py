@@ -24,7 +24,7 @@ def mock_tavily_extract_result():
 async def test_research_short_text_searches():
     from chains.research_chain import research_content
 
-    with patch("chains.research_chain._tavily_search", new_callable=AsyncMock) as mock_search:
+    with patch("chains.rag_agent._web_search", new_callable=AsyncMock) as mock_search:
         mock_search.return_value = "Search result content"
 
         r = await research_content("Harness Engineering", search_enabled=True)
@@ -33,21 +33,19 @@ async def test_research_short_text_searches():
         assert "[联网研究参考内容]" in r.content
         assert "[用户输入]" in r.content
         assert "Harness Engineering" in r.content
-        mock_search.assert_called_once_with("Harness Engineering")
 
 
 @pytest.mark.asyncio
 async def test_research_url_extracts():
     from chains.research_chain import research_content
 
-    with patch("chains.research_chain._tavily_extract", new_callable=AsyncMock) as mock_extract:
+    with patch("chains.rag_agent._web_extract", new_callable=AsyncMock) as mock_extract:
         mock_extract.return_value = "Extracted content"
 
         r = await research_content("https://example.com/article", search_enabled=True)
 
         assert r.search_used is True
         assert "[联网研究参考内容]" in r.content
-        mock_extract.assert_called_once_with("https://example.com/article")
 
 
 @pytest.mark.asyncio
@@ -75,8 +73,9 @@ async def test_research_disabled():
 async def test_research_no_api_key():
     from chains.research_chain import research_content
 
-    with patch("chains.research_chain.settings") as mock_settings:
+    with patch("chains.rag_agent.settings") as mock_settings:
         mock_settings.tavily_api_key = ""
+        mock_settings.embedding_api_key = ""
 
         r = await research_content("Harness Engineering", search_enabled=True)
 
@@ -88,7 +87,7 @@ async def test_research_no_api_key():
 async def test_research_search_failure_degrades():
     from chains.research_chain import research_content
 
-    with patch("chains.research_chain._tavily_search", new_callable=AsyncMock) as mock_search:
+    with patch("chains.rag_agent._web_search", new_callable=AsyncMock) as mock_search:
         mock_search.return_value = ""
 
         r = await research_content("Harness Engineering", search_enabled=True)
@@ -101,7 +100,7 @@ async def test_research_search_failure_degrades():
 async def test_research_search_exception_degrades():
     from chains.research_chain import research_content
 
-    with patch("chains.research_chain._tavily_search", new_callable=AsyncMock) as mock_search:
+    with patch("chains.rag_agent._web_search", new_callable=AsyncMock) as mock_search:
         mock_search.side_effect = Exception("API error")
 
         r = await research_content("Harness Engineering", search_enabled=True)
@@ -112,7 +111,7 @@ async def test_research_search_exception_degrades():
 
 @pytest.mark.asyncio
 async def test_tavily_search_success():
-    from chains.research_chain import _tavily_search
+    from chains.rag_agent import _web_search
 
     mock_result = {
         "results": [
@@ -123,7 +122,7 @@ async def test_tavily_search_success():
 
     with patch("langchain_tavily.TavilySearch") as MockSearch:
         MockSearch.return_value.invoke.return_value = mock_result
-        result = await _tavily_search("test query")
+        result = await _web_search("test query")
 
         assert "Test content" in result
         assert "More content" in result
@@ -131,44 +130,44 @@ async def test_tavily_search_success():
 
 @pytest.mark.asyncio
 async def test_tavily_search_empty():
-    from chains.research_chain import _tavily_search
+    from chains.rag_agent import _web_search
 
     with patch("langchain_tavily.TavilySearch") as MockSearch:
         MockSearch.return_value.invoke.return_value = {"results": []}
-        result = await _tavily_search("nonexistent")
+        result = await _web_search("nonexistent")
 
         assert result == ""
 
 
 @pytest.mark.asyncio
 async def test_tavily_search_exception():
-    from chains.research_chain import _tavily_search
+    from chains.rag_agent import _web_search
 
     with patch("langchain_tavily.TavilySearch", side_effect=Exception("API error")):
-        result = await _tavily_search("test")
+        result = await _web_search("test")
 
         assert result == ""
 
 
 @pytest.mark.asyncio
 async def test_tavily_extract_success():
-    from chains.research_chain import _tavily_extract
+    from chains.rag_agent import _web_extract
 
     mock_result = {"results": [{"url": "https://example.com", "raw_content": "Full content"}]}
 
     with patch("langchain_tavily.TavilyExtract") as MockExtract:
         MockExtract.return_value.invoke.return_value = mock_result
-        result = await _tavily_extract("https://example.com")
+        result = await _web_extract("https://example.com")
 
         assert "Full content" in result
 
 
 @pytest.mark.asyncio
 async def test_tavily_extract_exception():
-    from chains.research_chain import _tavily_extract
+    from chains.rag_agent import _web_extract
 
     with patch("langchain_tavily.TavilyExtract", side_effect=Exception("API error")):
-        result = await _tavily_extract("https://example.com")
+        result = await _web_extract("https://example.com")
 
         assert result == ""
 

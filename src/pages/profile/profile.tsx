@@ -2,7 +2,7 @@ import { useState, useCallback } from 'react'
 import Taro, { useDidShow } from '@tarojs/taro'
 import { View, Text, Image, Button, Input, ScrollView } from '@tarojs/components'
 import { getUserState, setUserState } from '../../store/user'
-import { getPendingAchievements, clearPendingAchievements } from '../../store/quiz'
+import { getPendingAchievements, clearPendingAchievements, setCurrentQuiz } from '../../store/quiz'
 import { api } from '../../services/api'
 import type {
   UserStats,
@@ -12,6 +12,7 @@ import type {
   TrendDay,
   DomainStat,
   GoalData,
+  Document,
 } from '../../types/quiz'
 import { formatAccuracy, formatLevel, formatXpProgress, formatDate } from '../../utils/format'
 import { computeLocalStats } from '../../utils/storage'
@@ -54,6 +55,8 @@ export default function Profile() {
   const [calendarMonth, setCalendarMonth] = useState(now.getMonth() + 1)
   const [modalQueue, setModalQueue] = useState<Achievement[]>([])
   const [currentAchievement, setCurrentAchievement] = useState<Achievement | null>(null)
+  const [documents, setDocuments] = useState<Document[]>([])
+  const [uploading, setUploading] = useState(false)
 
   const loadData = useCallback(() => {
     const currentUser = getUserState()
@@ -95,6 +98,7 @@ export default function Profile() {
 
   useDidShow(() => {
     loadData()
+    loadDocuments()
     const pending = getPendingAchievements()
     if (pending.length > 0) {
       clearPendingAchievements()
@@ -103,6 +107,74 @@ export default function Profile() {
       setModalQueue(queue)
     }
   })
+
+  const loadDocuments = async () => {
+    try {
+      const data = await api.getDocuments()
+      setDocuments(data.items)
+    } catch {}
+  }
+
+  const handleUploadDoc = async () => {
+    try {
+      const res = await Taro.chooseMessageFile({
+        count: 1,
+        type: 'file',
+        extension: ['pdf', 'docx', 'txt', 'md'],
+      })
+      const file = res.tempFiles[0]
+      if (!file) return
+      setUploading(true)
+      Taro.showLoading({ title: '正在上传解析...' })
+      await api.uploadDocument(file.path, file.name)
+      Taro.hideLoading()
+      Taro.showToast({ title: '上传成功', icon: 'success' })
+      loadDocuments()
+    } catch (err) {
+      Taro.hideLoading()
+      Taro.showModal({ title: '上传失败', content: err instanceof Error ? err.message : '请稍后重试', showCancel: false })
+    } finally {
+      setUploading(false)
+    }
+  }
+
+  const handleDeleteDoc = async (doc: Document) => {
+    const confirmed = await Taro.showModal({ title: '删除文档', content: `确定删除「${doc.original_filename}」？` })
+    if (!confirmed.confirm) return
+    try {
+      await api.deleteDocument(doc.id)
+      setDocuments(prev => prev.filter(d => d.id !== doc.id))
+      Taro.showToast({ title: '已删除', icon: 'success' })
+    } catch {
+      Taro.showToast({ title: '删除失败', icon: 'none' })
+    }
+  }
+
+  const handleStartQuizFromDoc = async (doc: Document) => {
+    try {
+      Taro.showLoading({ title: '正在生成题目...' })
+      const textData = await api.getDocumentText(doc.id)
+      if (!textData.text_content || textData.text_content.length < 50) {
+        Taro.hideLoading()
+        Taro.showToast({ title: '文档内容过少', icon: 'none' })
+        return
+      }
+      const content = textData.text_content.slice(0, 12000)
+      const generated = await api.generate(content)
+      setCurrentQuiz({ ...generated, source_content: content })
+      Taro.hideLoading()
+      Taro.navigateTo({ url: '/pages/quiz/quiz' })
+    } catch (err) {
+      Taro.hideLoading()
+      Taro.showModal({ title: '生成失败', content: err instanceof Error ? err.message : '请稍后重试', showCancel: false })
+    }
+  }
+
+  const formatFileSize = (bytes: number) => {
+    if (bytes < 1024) return `${bytes}B`
+    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)}KB`
+    return `${(bytes / (1024 * 1024)).toFixed(1)}MB`
+  }
 
   const readAvatarAsBase64 = (filePath: string): Promise<string> => new Promise((resolve, reject) => {
     Taro.getFileSystemManager().readFile({
@@ -476,6 +548,34 @@ export default function Profile() {
           ))}
         </View>
       )}
+
+      {/* ── Knowledge Base ── */}
+      <View className='kb-card'>
+        <View className='kb-header'>
+          <Text className='kb-title'>📚 我的知识库</Text>
+          <Text className='kb-count'>{documents.length} 个文档</Text>
+        </View>
+        <View className='kb-upload' onClick={handleUploadDoc}>
+          <Text className='kb-upload-icon'>{uploading ? '⏳' : '📤'}</Text>
+          <Text className='kb-upload-text'>{uploading ? '上传中...' : '上传文档'}</Text>
+        </View>
+        {documents.length > 0 && (
+          <View className='kb-list'>
+            {documents.map(doc => (
+              <View key={doc.id} className='kb-doc'>
+                <View className='kb-doc-info'>
+                  <Text className='kb-doc-name'>{doc.original_filename}</Text>
+                  <Text className='kb-doc-meta'>{formatFileSize(doc.file_size)} · {doc.text_length}字</Text>
+                </View>
+                <View className='kb-doc-actions'>
+                  <Text className='kb-action kb-action-primary' onClick={() => handleStartQuizFromDoc(doc)}>🎯 闯关</Text>
+                  <Text className='kb-action kb-action-danger' onClick={() => handleDeleteDoc(doc)}>🗑️</Text>
+                </View>
+              </View>
+            ))}
+          </View>
+        )}
+      </View>
 
       {/* ── Menu ── */}
       <View className='menu-section'>

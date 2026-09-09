@@ -1,5 +1,6 @@
 import pytest
 from unittest.mock import AsyncMock, patch
+from chains.research_chain import ResearchResult
 
 
 @pytest.mark.asyncio
@@ -18,8 +19,11 @@ async def test_get_examples(client):
 
 @pytest.mark.asyncio
 async def test_generate_quiz_success(client, mock_generate_result):
-    with patch("routers.generate.chain_generate") as mock_chain:
+    from chains.research_chain import ResearchResult
+    with patch("routers.generate.chain_generate") as mock_chain, \
+         patch("routers.generate.research_content", new_callable=AsyncMock) as mock_research:
         mock_chain.ainvoke = AsyncMock(return_value=mock_generate_result)
+        mock_research.return_value = ResearchResult(content="太阳系基础知识", search_used=False)
         resp = await client.post("/api/generate", json={
             "content": "太阳系基础知识",
             "question_count": 5,
@@ -54,8 +58,11 @@ async def test_generate_quiz_count_out_of_range(client):
 
 @pytest.mark.asyncio
 async def test_generate_quiz_chain_error(client):
-    with patch("routers.generate.chain_generate") as mock_chain:
+    from chains.research_chain import ResearchResult
+    with patch("routers.generate.chain_generate") as mock_chain, \
+         patch("routers.generate.research_content", new_callable=AsyncMock) as mock_research:
         mock_chain.ainvoke = AsyncMock(side_effect=Exception("API timeout"))
+        mock_research.return_value = ResearchResult(content="测试内容", search_used=False)
         resp = await client.post("/api/generate", json={
             "content": "测试内容",
             "question_count": 5,
@@ -78,8 +85,11 @@ async def test_generate_quiz_excludes_previous_questions(client, mock_generate_r
     duplicate_batch = {"topic": "太阳系", "questions": [old_question]}
     fresh_batch = {"topic": "太阳系", "questions": [new_question]}
 
-    with patch("routers.generate.chain_generate") as mock_chain:
+    with patch("routers.generate.chain_generate") as mock_chain, \
+         patch("routers.generate.research_content", new_callable=AsyncMock) as mock_research:
         mock_chain.ainvoke = AsyncMock(side_effect=[duplicate_batch, fresh_batch, fresh_batch])
+        from chains.research_chain import ResearchResult
+        mock_research.return_value = ResearchResult(content="太阳系基础知识", search_used=False)
         resp = await client.post("/api/generate", json={
             "content": "太阳系基础知识",
             "question_count": 5,
@@ -98,8 +108,11 @@ async def test_generate_quiz_excludes_previous_questions(client, mock_generate_r
 @pytest.mark.asyncio
 async def test_generate_quiz_fails_when_all_questions_are_excluded(client, mock_generate_result):
     duplicate = {"topic": "太阳系", "questions": [mock_generate_result["questions"][0]]}
-    with patch("routers.generate.chain_generate") as mock_chain:
+    from chains.research_chain import ResearchResult
+    with patch("routers.generate.chain_generate") as mock_chain, \
+         patch("routers.generate.research_content", new_callable=AsyncMock) as mock_research:
         mock_chain.ainvoke = AsyncMock(return_value=duplicate)
+        mock_research.return_value = ResearchResult(content="太阳系基础知识", search_used=False)
         resp = await client.post("/api/generate", json={
             "content": "太阳系基础知识",
             "question_count": 5,

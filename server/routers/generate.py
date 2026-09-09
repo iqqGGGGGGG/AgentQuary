@@ -1,6 +1,10 @@
 import uuid
 import logging
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, Depends, HTTPException
+from sqlalchemy.ext.asyncio import AsyncSession
+from auth import get_current_user
+from database import get_db
+from models.orm import User
 from models.schemas import GenerateRequest, GenerateResponse
 from chains.generate_chain import chain_generate, parser
 from chains.research_chain import research_content
@@ -15,10 +19,14 @@ def _question_key(value: str) -> str:
 
 
 @router.post("/generate", response_model=GenerateResponse)
-async def generate_quiz(req: GenerateRequest):
+async def generate_quiz(
+    req: GenerateRequest,
+    db: AsyncSession = Depends(get_db),
+):
     try:
+        user_id = None
         content = await normalize_content(req.content)
-        research = await research_content(content)
+        research = await research_content(content, user_id=user_id)
         logger.debug("After research: content_length=%d, search_used=%s, needs_clarification=%s",
                       len(research.content), research.search_used, research.needs_clarification)
 

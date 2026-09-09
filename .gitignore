@@ -15,6 +15,7 @@ __pycache__/
 !.env.example
 server/.env
 server/uploads/
+server/chroma_data/
 server/.env.*
 !server/.env.example
 

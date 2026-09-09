@@ -281,3 +281,21 @@ class HistorySaveResponse(BaseModel):
     xp_earned: int = 0
     new_level: int | None = None
     new_achievements: list[AchievementResponse] = []
+
+
+# ── Document Schemas ──
+
+class DocumentResponse(BaseModel):
+    id: int
+    filename: str
+    original_filename: str
+    file_type: str
+    file_size: int
+    text_length: int
+    created_at: str
+    text_preview: str | None = None
+
+
+class DocumentListResponse(BaseModel):
+    items: list[DocumentResponse]
+    total: int

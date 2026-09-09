@@ -5,7 +5,7 @@ from pathlib import Path
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
-from routers import examples, generate, report, auth, user
+from routers import examples, generate, report, auth, user, documents
 from database import init_db
 from auth import validate_auth_settings
 from config import settings
@@ -50,6 +50,7 @@ app.include_router(generate.router)
 app.include_router(report.router)
 app.include_router(auth.router)
 app.include_router(user.router)
+app.include_router(documents.router)
 
 
 @app.get("/")
