@@ -40,6 +40,7 @@ body {
   font-size: 32px;
   font-weight: 700;
   box-shadow: 0 8px 32px rgba(124, 92, 252, 0.3);
+  box-sizing: border-box;
 }
 
 .btn-primary:disabled {
@@ -60,6 +61,7 @@ body {
   border-radius: var(--radius-btn);
   font-size: 28px;
   font-weight: 500;
+  box-sizing: border-box;
 }
 
 .btn-text-link {

@@ -1,3 +1,5 @@
+from typing import Literal
+
 from pydantic import BaseModel, Field, field_validator, model_validator
 
 
@@ -22,6 +24,7 @@ class Question(BaseModel):
 class GenerateRequest(BaseModel):
     content: str = Field(min_length=1, max_length=12_000)
     question_count: int = Field(default=10, ge=5, le=20)
+    excluded_questions: list[str] = Field(default_factory=list, max_length=100)
 
     @field_validator("content")
     @classmethod
@@ -35,6 +38,9 @@ class GenerateResponse(BaseModel):
     session_id: str
     topic: str
     questions: list[Question]
+    search_used: bool = False
+    needs_clarification: bool = False
+    domain_options: list[str] = Field(default_factory=list)
 
 
 class ReportRequest(BaseModel):
@@ -98,6 +104,18 @@ class UserProfileUpdate(BaseModel):
     nickname: str | None = Field(default=None, max_length=64)
     avatar_url: str | None = Field(default=None, max_length=512)
 
+    @field_validator("nickname")
+    @classmethod
+    def nickname_must_not_be_blank(cls, value: str | None):
+        if value is not None and not value.strip():
+            raise ValueError("nickname 不能为空")
+        return value.strip() if value is not None else None
+
+
+class AvatarUploadRequest(BaseModel):
+    data: str = Field(min_length=1, max_length=3_000_000)
+    file_type: Literal["png", "jpg", "jpeg", "webp"]
+
 
 class UserStatsResponse(BaseModel):
     total_quizzes: int = 0
@@ -134,3 +152,132 @@ class HistoryItemResponse(BaseModel):
 class HistoryListResponse(BaseModel):
     items: list[HistoryItemResponse]
     total: int
+
+
+# ── Level Schemas ──
+
+class LevelInfoResponse(BaseModel):
+    xp: int
+    level: int
+    level_name: str
+    current_level_xp: int
+    next_level_xp: int
+    progress: float
+
+
+# ── Calendar Schemas ──
+
+class CalendarDay(BaseModel):
+    date: str
+    count: int
+    high: bool = False
+
+
+class LearningCalendarResponse(BaseModel):
+    year: int
+    month: int
+    days: list[CalendarDay]
+    current_streak: int
+
+
+# ── Achievement Schemas ──
+
+class AchievementResponse(BaseModel):
+    id: int
+    key: str
+    name: str
+    description: str
+    icon: str
+    condition_type: str
+    condition_value: int
+    sort_order: int
+    unlocked: bool = False
+    unlocked_at: str | None = None
+
+
+class AchievementListResponse(BaseModel):
+    items: list[AchievementResponse]
+    unlocked_count: int
+    total_count: int
+
+
+# ── Wrong Question Schemas ──
+
+class WrongQuestionItem(BaseModel):
+    record_id: int
+    question_id: int
+    topic: str
+    question: str
+    your_answer: str
+    correct_answer: str
+    explanation: str
+    created_at: str
+
+
+class WrongQuestionListResponse(BaseModel):
+    items: list[WrongQuestionItem]
+    total: int
+    topic_count: int
+
+
+# ── Trends Schemas ──
+
+class TrendDay(BaseModel):
+    date: str
+    count: int
+    accuracy: float = 0.0
+
+
+class TrendsResponse(BaseModel):
+    days: list[TrendDay]
+
+
+# ── Domain Schemas ──
+
+class DomainStat(BaseModel):
+    domain: str
+    icon: str
+    accuracy: float
+    count: int
+
+
+class DomainsResponse(BaseModel):
+    domains: list[DomainStat]
+
+
+# ── Preferences Schemas ──
+
+class PreferencesUpdate(BaseModel):
+    preferences: list[str] = Field(max_length=20)
+
+
+class PreferencesResponse(BaseModel):
+    preferences: list[str]
+
+
+# ── Goal Schemas ──
+
+class GoalUpdate(BaseModel):
+    daily_goal: int = Field(ge=1, le=10)
+
+
+class GoalResponse(BaseModel):
+    daily_goal: int
+    today_count: int
+
+
+# ── Extended History Save Response ──
+
+class HistorySaveResponse(BaseModel):
+    id: int
+    session_id: str
+    topic: str
+    accuracy: float
+    total_questions: int
+    correct_count: int
+    duration_seconds: int
+    summary: str | None = None
+    created_at: str
+    xp_earned: int = 0
+    new_level: int | None = None
+    new_achievements: list[AchievementResponse] = []

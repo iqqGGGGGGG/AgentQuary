@@ -1,3 +1,5 @@
+import base64
+
 import pytest
 
 
@@ -52,6 +54,40 @@ async def test_update_profile_partial(auth_client):
 async def test_update_profile_no_auth(client):
     resp = await client.put("/api/user/profile", json={"nickname": "no"})
     assert resp.status_code == 401
+
+
+@pytest.mark.asyncio
+async def test_update_profile_rejects_blank_nickname(auth_client):
+    resp = await auth_client.put("/api/user/profile", json={"nickname": "   "})
+    assert resp.status_code == 422
+
+
+@pytest.mark.asyncio
+async def test_upload_avatar_persists_valid_image(auth_client, tmp_path, monkeypatch):
+    from routers import user as user_router
+
+    avatar_dir = tmp_path / "avatars"
+    monkeypatch.setattr(user_router, "AVATAR_DIR", avatar_dir)
+    png = b"\x89PNG\r\n\x1a\n" + b"test-image-content"
+    resp = await auth_client.post("/api/user/profile/avatar", json={
+        "data": base64.b64encode(png).decode("ascii"),
+        "file_type": "png",
+    })
+
+    assert resp.status_code == 200
+    assert "/uploads/avatars/" in resp.json()["avatar_url"]
+    saved_files = list(avatar_dir.glob("*.png"))
+    assert len(saved_files) == 1
+    assert saved_files[0].read_bytes() == png
+
+
+@pytest.mark.asyncio
+async def test_upload_avatar_rejects_non_image(auth_client):
+    resp = await auth_client.post("/api/user/profile/avatar", json={
+        "data": base64.b64encode(b"not-an-image").decode("ascii"),
+        "file_type": "png",
+    })
+    assert resp.status_code == 400
 
 
 # ── Stats ──
@@ -242,3 +278,269 @@ async def test_history_no_auth(client):
 
     resp2 = await client.get("/api/user/history")
     assert resp2.status_code == 401
+
+
+# ── Level ──
+
+@pytest.mark.asyncio
+async def test_get_level(auth_client):
+    resp = await auth_client.get("/api/user/level")
+    assert resp.status_code == 200
+    data = resp.json()
+    assert data["xp"] == 0
+    assert data["level"] == 1
+    assert data["level_name"] == "知识新手"
+    assert "progress" in data
+
+
+@pytest.mark.asyncio
+async def test_level_up_after_save(auth_client):
+    for i in range(5):
+        await auth_client.post("/api/user/history", json={
+            "session_id": f"level_sess_{i}",
+            "topic": "测试主题",
+            "accuracy": 1.0,
+            "total_questions": 10,
+            "correct_count": 10,
+            "duration_seconds": 60,
+        })
+    resp = await auth_client.get("/api/user/level")
+    assert resp.status_code == 200
+    data = resp.json()
+    assert data["xp"] > 0
+    assert data["level"] >= 1
+
+
+# ── Learning Calendar ──
+
+@pytest.mark.asyncio
+async def test_learning_calendar(auth_client):
+    await auth_client.post("/api/user/history", json={
+        "session_id": "cal_sess",
+        "topic": "日历测试",
+        "accuracy": 0.8,
+        "total_questions": 10,
+        "correct_count": 8,
+        "duration_seconds": 120,
+    })
+    from datetime import date
+    today = date.today()
+    resp = await auth_client.get(f"/api/user/learning-calendar?year={today.year}&month={today.month}")
+    assert resp.status_code == 200
+    data = resp.json()
+    assert data["year"] == today.year
+    assert data["month"] == today.month
+    assert len(data["days"]) > 0
+
+
+@pytest.mark.asyncio
+async def test_learning_calendar_no_auth(client):
+    resp = await client.get("/api/user/learning-calendar?year=2026&month=8")
+    assert resp.status_code == 401
+
+
+# ── Achievements ──
+
+@pytest.mark.asyncio
+async def test_get_achievements(auth_client):
+    resp = await auth_client.get("/api/user/achievements")
+    assert resp.status_code == 200
+    data = resp.json()
+    assert data["total_count"] == 10
+    assert data["unlocked_count"] == 0
+    assert len(data["items"]) == 10
+
+
+@pytest.mark.asyncio
+async def test_achievement_unlock_first_quiz(auth_client):
+    await auth_client.post("/api/user/history", json={
+        "session_id": "ach_first",
+        "topic": "成就测试",
+        "accuracy": 0.8,
+        "total_questions": 10,
+        "correct_count": 8,
+        "duration_seconds": 120,
+    })
+    resp = await auth_client.get("/api/user/achievements")
+    data = resp.json()
+    unlocked = [a for a in data["items"] if a["unlocked"]]
+    assert len(unlocked) >= 1
+    assert any(a["key"] == "first_quiz" for a in unlocked)
+
+
+# ── Wrong Questions ──
+
+@pytest.mark.asyncio
+async def test_wrong_questions(auth_client):
+    await auth_client.post("/api/user/history", json={
+        "session_id": "wq_sess",
+        "topic": "错题测试",
+        "accuracy": 0.5,
+        "total_questions": 2,
+        "correct_count": 1,
+        "duration_seconds": 60,
+        "questions": [
+            {"id": 1, "type": "single_choice", "question": "问题1？", "options": ["A", "B", "C", "D"], "answer": 0, "explanation": "解释1"},
+            {"id": 2, "type": "single_choice", "question": "问题2？", "options": ["A", "B", "C", "D"], "answer": 2, "explanation": "解释2"},
+        ],
+        "user_answers": [
+            {"question_id": 1, "selected": 0, "is_correct": True},
+            {"question_id": 2, "selected": 1, "is_correct": False},
+        ],
+    })
+    resp = await auth_client.get("/api/user/wrong-questions")
+    assert resp.status_code == 200
+    data = resp.json()
+    assert data["total"] >= 1
+    assert data["topic_count"] >= 1
+
+
+@pytest.mark.asyncio
+async def test_wrong_questions_empty(auth_client):
+    resp = await auth_client.get("/api/user/wrong-questions")
+    assert resp.status_code == 200
+    data = resp.json()
+    assert data["total"] == 0
+
+
+@pytest.mark.asyncio
+async def test_remove_wrong_question(auth_client):
+    await auth_client.post("/api/user/history", json={
+        "session_id": "wq_del",
+        "topic": "删除测试",
+        "accuracy": 0.0,
+        "total_questions": 1,
+        "correct_count": 0,
+        "duration_seconds": 30,
+        "questions": [
+            {"id": 1, "type": "single_choice", "question": "Q?", "options": ["A", "B", "C", "D"], "answer": 0, "explanation": "E"},
+        ],
+        "user_answers": [
+            {"question_id": 1, "selected": 1, "is_correct": False},
+        ],
+    })
+    resp = await auth_client.delete("/api/user/wrong-questions/1/1")
+    assert resp.status_code == 200
+
+
+@pytest.mark.asyncio
+async def test_wrong_questions_quiz(auth_client):
+    await auth_client.post("/api/user/history", json={
+        "session_id": "wq_quiz_sess",
+        "topic": "错题练习测试",
+        "accuracy": 0.5,
+        "total_questions": 2,
+        "correct_count": 1,
+        "duration_seconds": 60,
+        "questions": [
+            {"id": 10, "type": "single_choice", "question": "Q10？", "options": ["A", "B", "C", "D"], "answer": 0, "explanation": "E10"},
+            {"id": 11, "type": "single_choice", "question": "Q11？", "options": ["A", "B", "C", "D"], "answer": 2, "explanation": "E11"},
+        ],
+        "user_answers": [
+            {"question_id": 10, "selected": 0, "is_correct": True},
+            {"question_id": 11, "selected": 1, "is_correct": False},
+        ],
+    })
+    resp = await auth_client.get("/api/user/wrong-questions/quiz")
+    assert resp.status_code == 200
+    data = resp.json()
+    assert data["topic"] == "错题练习"
+    assert data["session_id"].startswith("wrong-")
+    assert len(data["questions"]) >= 1
+    q = data["questions"][0]
+    assert "id" in q and "type" in q and "options" in q and "answer" in q
+
+
+@pytest.mark.asyncio
+async def test_wrong_questions_quiz_empty(auth_client):
+    resp = await auth_client.get("/api/user/wrong-questions/quiz")
+    assert resp.status_code == 200
+    data = resp.json()
+    assert data["topic"] == "错题练习"
+    assert data["questions"] == []
+
+
+# ── Trends ──
+
+@pytest.mark.asyncio
+async def test_get_trends(auth_client):
+    await auth_client.post("/api/user/history", json={
+        "session_id": "trend_sess",
+        "topic": "趋势测试",
+        "accuracy": 0.7,
+        "total_questions": 10,
+        "correct_count": 7,
+        "duration_seconds": 120,
+    })
+    resp = await auth_client.get("/api/user/trends?days=7")
+    assert resp.status_code == 200
+    data = resp.json()
+    assert len(data["days"]) == 7
+
+
+# ── Domains ──
+
+@pytest.mark.asyncio
+async def test_get_domains(auth_client):
+    await auth_client.post("/api/user/history", json={
+        "session_id": "domain_sess",
+        "topic": "三国人物关系",
+        "accuracy": 0.8,
+        "total_questions": 10,
+        "correct_count": 8,
+        "duration_seconds": 120,
+    })
+    resp = await auth_client.get("/api/user/domains")
+    assert resp.status_code == 200
+    data = resp.json()
+    assert len(data["domains"]) >= 1
+
+
+# ── Preferences ──
+
+@pytest.mark.asyncio
+async def test_preferences_crud(auth_client):
+    resp = await auth_client.get("/api/user/preferences")
+    assert resp.status_code == 200
+    assert resp.json()["preferences"] == []
+
+    resp2 = await auth_client.put("/api/user/preferences", json={"preferences": ["历史", "科学"]})
+    assert resp2.status_code == 200
+    assert resp2.json()["preferences"] == ["历史", "科学"]
+
+    resp3 = await auth_client.get("/api/user/preferences")
+    assert resp3.json()["preferences"] == ["历史", "科学"]
+
+
+# ── Goal ──
+
+@pytest.mark.asyncio
+async def test_goal_crud(auth_client):
+    resp = await auth_client.get("/api/user/goal")
+    assert resp.status_code == 200
+    data = resp.json()
+    assert data["daily_goal"] == 3
+    assert data["today_count"] == 0
+
+    resp2 = await auth_client.put("/api/user/goal", json={"daily_goal": 5})
+    assert resp2.status_code == 200
+    assert resp2.json()["daily_goal"] == 5
+
+
+# ── History Save Response ──
+
+@pytest.mark.asyncio
+async def test_save_history_returns_xp_and_achievements(auth_client):
+    resp = await auth_client.post("/api/user/history", json={
+        "session_id": "xp_sess",
+        "topic": "XP测试",
+        "accuracy": 0.9,
+        "total_questions": 10,
+        "correct_count": 9,
+        "duration_seconds": 120,
+    })
+    assert resp.status_code == 200
+    data = resp.json()
+    assert data["xp_earned"] > 0
+    assert "new_achievements" in data
+    assert isinstance(data["new_achievements"], list)

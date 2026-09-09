@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import Taro, { useRouter, useShareAppMessage } from '@tarojs/taro'
 import { Button, View, Text, Image } from '@tarojs/components'
-import { getQuizResult, setCurrentQuiz, setQuizResult } from '../../store/quiz'
+import { getQuizResult, setCurrentQuiz, setQuizResult, setPendingAchievements } from '../../store/quiz'
 import { api } from '../../services/api'
 import { clearQuizProgress, getHistory, saveHistory, saveQuizProgress } from '../../utils/storage'
 import { formatDuration, formatAccuracy } from '../../utils/format'
@@ -14,6 +14,8 @@ export default function Report() {
   const [result] = useState(getQuizResult())
   const [report, setReport] = useState<ReportResponse | null>(null)
   const [showWrongReview, setShowWrongReview] = useState(false)
+  const [retrying, setRetrying] = useState(false)
+  const [summaryLoading, setSummaryLoading] = useState(true)
   const router = useRouter()
   const fromHistory = router.params.from === 'history'
 
@@ -48,7 +50,10 @@ export default function Report() {
     }
     setReport(localReport)
 
-    if (fromHistory) return
+    if (fromHistory) {
+      setSummaryLoading(false)
+      return
+    }
 
     const persistHistory = (summary = '') => {
       saveHistory({
@@ -75,6 +80,10 @@ export default function Report() {
           questions: result.questions,
           user_answers: result.user_answers,
           summary,
+        }).then(res => {
+          if (res.new_achievements?.length) {
+            setPendingAchievements(res.new_achievements)
+          }
         }).catch(() => {})
       }
     }
@@ -87,30 +96,47 @@ export default function Report() {
       duration_seconds: result.duration_seconds,
     }).then(res => {
       setReport(prev => prev ? { ...prev, summary: res.summary, encouragement: res.encouragement } : res)
+      setSummaryLoading(false)
       persistHistory(res.summary)
-    }).catch(() => {})
+    }).catch(() => { setSummaryLoading(false) })
   }, [])
 
-  const handleRetry = () => {
-    if (!result) return
-    const quiz = {
-      session_id: `${result.session_id}-retry-${Date.now()}`,
-      topic: result.topic,
-      questions: result.questions,
+  const handleRetry = async () => {
+    if (!result || retrying) return
+    setRetrying(true)
+    Taro.showLoading({ title: '正在生成新题...' })
+    try {
+      const sourceContent = result.source_content?.trim() || result.topic
+      const generated = await api.generate(
+        sourceContent,
+        result.total_count,
+        result.questions.map(question => question.question),
+      )
+      const quiz = { ...generated, source_content: sourceContent }
+      setCurrentQuiz(quiz)
+      setQuizResult(null)
+      clearQuizProgress()
+      saveQuizProgress({
+        quiz,
+        current_index: 0,
+        selected_option: -1,
+        status: 'selecting',
+        user_answers: [],
+        streak: 0,
+        start_time: Date.now(),
+      })
+      Taro.hideLoading()
+      Taro.redirectTo({ url: '/pages/quiz/quiz' })
+    } catch (err) {
+      Taro.hideLoading()
+      Taro.showModal({
+        title: '新题生成失败',
+        content: err instanceof Error ? err.message : '请稍后重试',
+        showCancel: false,
+      })
+    } finally {
+      setRetrying(false)
     }
-    setCurrentQuiz(quiz)
-    setQuizResult(null)
-    clearQuizProgress()
-    saveQuizProgress({
-      quiz,
-      current_index: 0,
-      selected_option: -1,
-      status: 'selecting',
-      user_answers: [],
-      streak: 0,
-      start_time: Date.now(),
-    })
-    Taro.redirectTo({ url: '/pages/quiz/quiz' })
   }
 
   const handleHome = () => {
@@ -183,6 +209,21 @@ export default function Report() {
         </View>
       </View>
 
+      {/* AI Summary */}
+      {summaryLoading && (
+        <View className='summary-card summary-loading'>
+          <Text className='summary-label'>AI 总结</Text>
+          <Text className='summary-loading-text'>AI 正在生成总结...</Text>
+        </View>
+      )}
+      {!summaryLoading && report.summary && (
+        <View className='summary-card'>
+          <Text className='summary-label'>AI 总结</Text>
+          <Text className='summary-text'>{report.summary}</Text>
+        </View>
+      )}
+      {report.encouragement && <Text className='encouragement'>{report.encouragement}</Text>}
+
       {/* Mastered */}
       {report.mastered.length > 0 && (
         <View className='report-section'>
@@ -236,20 +277,10 @@ export default function Report() {
         </View>
       )}
 
-      {/* AI Summary */}
-      {report.summary && (
-        <View className='summary-card'>
-          <Text className='summary-label'>AI 总结</Text>
-          <Text className='summary-text'>{report.summary}</Text>
-        </View>
-      )}
-
-      {report.encouragement && <Text className='encouragement'>{report.encouragement}</Text>}
-
       {/* Actions */}
       <View className='report-actions'>
-        <View className='btn-primary' onClick={handleRetry}>
-          <Text>🔄 再来一关</Text>
+        <View className={`btn-primary ${retrying ? 'btn-disabled' : ''}`} onClick={handleRetry}>
+          <Text>{retrying ? '正在生成新题...' : '🔄 再来一关'}</Text>
         </View>
         <View className='btn-secondary' onClick={handleHome}>
           <Text>🏠 回到首页</Text>

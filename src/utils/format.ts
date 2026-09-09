@@ -21,3 +21,17 @@ export function formatTime(timestamp: number): string {
   if (hours < 24) return `${hours} 小时前`
   return `${date.getMonth() + 1}月${date.getDate()}日`
 }
+
+export function formatLevel(level: number, levelName: string): string {
+  return `Lv.${level} ${levelName}`
+}
+
+export function formatXpProgress(current: number, needed: number): string {
+  return `${current} / ${needed} XP`
+}
+
+export function formatDate(dateStr: string): string {
+  const parts = dateStr.split('-')
+  if (parts.length === 3) return `${parseInt(parts[1])}月${parseInt(parts[2])}日`
+  return dateStr
+}

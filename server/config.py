@@ -19,6 +19,10 @@ class Settings(BaseSettings):
     auth_secret: str = ""
     auth_token_ttl_seconds: int = 7 * 24 * 60 * 60
 
+    search_enabled: bool = True
+    tavily_api_key: str = ""
+    search_timeout: int = 15
+
     model_config = {"env_file": ".env", "env_file_encoding": "utf-8"}
 
     @property

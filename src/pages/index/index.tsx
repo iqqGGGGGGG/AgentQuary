@@ -26,9 +26,22 @@ const DEFAULT_EXAMPLES: ExampleTopic[] = [
   { id: 2, title: '太阳系的八大行星', category: '科学', description: '基础天文速览' },
   { id: 3, title: '常见心理学效应', category: '心理', description: '看完更懂自己' },
   { id: 4, title: '从种子到一杯咖啡', category: '生活', description: '咖啡入门必修' },
+  { id: 5, title: '认识中国传统节日', category: '文化', description: '传统习俗知多少' },
+  { id: 6, title: '人工智能基础概念', category: '科技', description: 'AI入门不迷路' },
+  { id: 7, title: '测试你的动漫常识', category: '娱乐', description: '二次元冷知识' },
+  { id: 8, title: '学习职场沟通技巧', category: '职场', description: '说话也有方法论' },
+  { id: 9, title: '挑战世界历史冷知识', category: '历史', description: '看看你知道几个' },
+  { id: 10, title: '生活中的法律常识', category: '法律', description: '实用法律小百科' },
 ]
 
 const TOPIC_ICONS = [graduationCapIcon, orbitIcon, brainIcon, coffeeIcon]
+
+function pickRandom<T extends { id: number }>(pool: T[], excludeIds: Set<number>, count: number): T[] {
+  const candidates = pool.filter(e => !excludeIds.has(e.id))
+  const shuffled = [...candidates].sort(() => Math.random() - 0.5)
+  if (shuffled.length < count) return [...pool].sort(() => Math.random() - 0.5).slice(0, count)
+  return shuffled.slice(0, count)
+}
 
 function TopicIcon({ index }: { index: number }) {
   const iconType = index % TOPIC_ICONS.length
@@ -41,14 +54,25 @@ function TopicIcon({ index }: { index: number }) {
 
 export default function Index() {
   const [content, setContent] = useState('')
-  const [examples, setExamples] = useState<ExampleTopic[]>(DEFAULT_EXAMPLES)
+  const [allExamples, setAllExamples] = useState<ExampleTopic[]>(DEFAULT_EXAMPLES)
+  const [displayedExamples, setDisplayedExamples] = useState<ExampleTopic[]>(() => pickRandom(DEFAULT_EXAMPLES, new Set(), 4))
+  const [shuffling, setShuffling] = useState(false)
+  const [animPhase, setAnimPhase] = useState<'out' | 'in' | null>(null)
   const [history, setHistory] = useState<HistoryItem[]>([])
   const [loading, setLoading] = useState(false)
   const [inputMode, setInputMode] = useState<'text' | 'link' | 'file'>('text')
   const [activeProgress, setActiveProgress] = useState<QuizProgress | null>(null)
+  const [clarificationOptions, setClarificationOptions] = useState<string[]>([])
+  const [clarificationLoading, setClarificationLoading] = useState(false)
 
   useEffect(() => {
-    api.examples().then(res => setExamples(res.examples)).catch(() => setExamples(DEFAULT_EXAMPLES))
+    api.examples().then(res => {
+      setAllExamples(res.examples)
+      setDisplayedExamples(pickRandom(res.examples, [], 4))
+    }).catch(() => {
+      setAllExamples(DEFAULT_EXAMPLES)
+      setDisplayedExamples(pickRandom(DEFAULT_EXAMPLES, new Set(), 4))
+    })
     setHistory(getHistory().slice(0, 2))
     setActiveProgress(getQuizProgress())
   }, [])
@@ -58,19 +82,50 @@ export default function Index() {
     setActiveProgress(getQuizProgress())
   })
 
+  const handleShuffle = () => {
+    if (shuffling || allExamples.length <= 4) return
+    setShuffling(true)
+    setAnimPhase('out')
+
+    setTimeout(() => {
+      const currentIds = new Set(displayedExamples.map(e => e.id))
+      const next = pickRandom(allExamples, currentIds, 4)
+
+      setDisplayedExamples(next)
+      setAnimPhase(null)
+    }, 250)
+
+    setTimeout(() => {
+      setAnimPhase('in')
+    }, 266)
+
+    setTimeout(() => {
+      setAnimPhase(null)
+      setShuffling(false)
+    }, 560)
+  }
+
   const handleStart = async () => {
     if (!content.trim()) {
       Taro.showToast({ title: '请输入学习内容', icon: 'none' })
       return
     }
     setLoading(true)
+    setClarificationOptions([])
     Taro.showLoading({ title: '正在生成题目...' })
     try {
       const cleanContent = content.trim()
       if (cleanContent.length > 12000) {
         throw new Error('内容超过 12000 字，请截取最需要学习的部分')
       }
-      const data = await api.generate(cleanContent)
+      const generated = await api.generate(cleanContent)
+      if (generated.needs_clarification && generated.domain_options?.length) {
+        Taro.hideLoading()
+        setClarificationOptions(generated.domain_options)
+        setLoading(false)
+        return
+      }
+      const data = { ...generated, source_content: cleanContent }
       setCurrentQuiz(data)
       clearQuizProgress()
       saveQuizProgress({
@@ -93,6 +148,39 @@ export default function Index() {
       })
     } finally {
       setLoading(false)
+    }
+  }
+
+  const handleDomainSelect = async (domain: string) => {
+    setClarificationLoading(true)
+    setClarificationOptions([])
+    Taro.showLoading({ title: '正在生成题目...' })
+    try {
+      const enrichedContent = `${content.trim()}\n\n我想学习的领域是：${domain}`
+      const generated = await api.generate(enrichedContent)
+      const data = { ...generated, source_content: enrichedContent }
+      setCurrentQuiz(data)
+      clearQuizProgress()
+      saveQuizProgress({
+        quiz: data,
+        current_index: 0,
+        selected_option: -1,
+        status: 'selecting',
+        user_answers: [],
+        streak: 0,
+        start_time: Date.now(),
+      })
+      Taro.hideLoading()
+      Taro.navigateTo({ url: '/pages/quiz/quiz' })
+    } catch (err) {
+      Taro.hideLoading()
+      Taro.showModal({
+        title: '生成失败',
+        content: err instanceof Error ? err.message : '请稍后重试',
+        showCancel: false,
+      })
+    } finally {
+      setClarificationLoading(false)
     }
   }
 
@@ -212,16 +300,47 @@ export default function Index() {
         <Text>开始闯关</Text>
       </View>
 
-      {/* Examples */}
-      {examples.length > 0 && (
+      {/* Domain Clarification */}
+      {clarificationOptions.length > 0 && (
         <View className='section'>
           <View className='section-header'>
             <View className='section-line' />
-            <Text className='section-title'>翻一页试试</Text>
+            <Text className='section-title'>你想学哪个方向？</Text>
             <View className='section-line' />
           </View>
           <View className='topic-grid'>
-            {examples.slice(0, 4).map((ex, idx) => (
+            {clarificationOptions.map((option, idx) => (
+              <View
+                key={idx}
+                className={`topic-card topic-card-${idx}`}
+                onClick={() => handleDomainSelect(option)}
+              >
+                <View className='topic-card-top'>
+                  <TopicIcon index={idx} />
+                </View>
+                <Text className='topic-title'>{option}</Text>
+              </View>
+            ))}
+          </View>
+        </View>
+      )}
+
+      {/* Examples */}
+      {displayedExamples.length > 0 && (
+        <View className='section'>
+          <View className='section-header'>
+            <View className='section-line' />
+            <Text className='section-title'>灵感选题</Text>
+            <View className='section-line' />
+            {allExamples.length > 4 && (
+              <View className={`shuffle-btn ${shuffling ? 'spinning' : ''}`} onClick={handleShuffle}>
+                <Text className='shuffle-icon'>🔄</Text>
+                <Text className='shuffle-text'>换一换</Text>
+              </View>
+            )}
+          </View>
+          <View className={`topic-grid ${animPhase === 'out' ? 'shuffle-out' : animPhase === 'in' ? 'shuffle-in' : ''}`}>
+            {displayedExamples.map((ex, idx) => (
               <View
                 key={ex.id}
                 className={`topic-card topic-card-${idx}`}

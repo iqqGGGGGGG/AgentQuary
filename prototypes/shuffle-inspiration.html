@@ -1,0 +1,214 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>灵感选题 · 随机切换原型</title>
+  <link rel="stylesheet" href="./current-ui.css">
+  <style>
+    .section-wrap { position: relative; }
+    .section-wrap .shuffle-btn {
+      position: absolute;
+      right: 0;
+      top: 50%;
+      transform: translateY(-50%);
+      padding: 3px 10px;
+      border-radius: 99px;
+      border: 1.5px solid rgba(124,92,252,.2);
+      background: var(--parchment, #FBF7F0);
+      cursor: pointer;
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--spell);
+      font-family: inherit;
+      display: inline-flex;
+      align-items: center;
+      gap: 3px;
+      transition: all .2s;
+      flex-shrink: 0;
+      white-space: nowrap;
+      z-index: 1;
+    }
+    .section-wrap .shuffle-btn:hover { background: rgba(124,92,252,.08); }
+    .section-wrap .shuffle-btn:active { transform: translateY(-50%) scale(.93); }
+    .section-wrap .shuffle-btn .icon {
+      display: inline-block;
+      transition: transform .4s ease;
+    }
+    .section-wrap .shuffle-btn.spinning .icon { transform: rotate(180deg); }
+
+    /* ── Card shuffle animation ── */
+    @keyframes cardOut {
+      0% { opacity: 1; transform: translateY(0) scale(1); }
+      100% { opacity: 0; transform: translateY(-10px) scale(.94); }
+    }
+    @keyframes cardIn {
+      0% { opacity: 0; transform: translateY(10px) scale(.94); }
+      100% { opacity: 1; transform: translateY(0) scale(1); }
+    }
+    .topic-grid.shuffle-out .topic-card {
+      animation: cardOut .22s ease forwards;
+    }
+    .topic-grid.shuffle-in .topic-card {
+      animation: cardIn .28s ease forwards;
+    }
+    .topic-grid.shuffle-in .topic-card:nth-child(2) { animation-delay: .04s; }
+    .topic-grid.shuffle-in .topic-card:nth-child(3) { animation-delay: .08s; }
+    .topic-grid.shuffle-in .topic-card:nth-child(4) { animation-delay: .12s; }
+
+    /* ── Prototype layout ── */
+    .proto-row { display: flex; gap: 32px; justify-content: center; flex-wrap: wrap; padding: 24px 16px 40px; }
+    .proto-col { width: 375px; }
+    .proto-label { text-align: center; font-size: 13px; font-weight: 700; color: var(--ink); margin-bottom: 10px; letter-spacing: .5px; }
+    .proto-note { text-align: center; font-size: 12px; color: var(--ink-light); margin-top: 10px; line-height: 1.6; }
+  </style>
+</head>
+<body>
+  <h1 class="prototype-title">灵感选题 · 随机切换</h1>
+  <p class="prototype-note">在「灵感选题」section-header 右侧添加「🔄 换一换」按钮，点击后从全部 10 个主题中随机抽取 4 个，带淡入淡出动画。</p>
+
+  <div class="proto-row">
+    <!-- State 1: Default -->
+    <div class="proto-col">
+      <div class="proto-label">默认状态</div>
+      <section class="phone" style="margin:0">
+        <header class="native-nav">📖 知识闯关</header>
+        <div class="scroll">
+          <div class="knowledge-stage">
+            <i class="orbit outer"></i><i class="orbit inner"></i>
+            <span class="badge b1"><img src="../src/assets/hero-icons/book-open.png" alt=""></span>
+            <span class="badge b2"><img src="../src/assets/hero-icons/atom.png" alt=""></span>
+            <span class="badge b3"><img src="../src/assets/hero-icons/globe.png" alt=""></span>
+            <span class="badge b4"><img src="../src/assets/hero-icons/lightbulb.png" alt=""></span>
+            <span class="robot-shell"><img src="../src/assets/mascot/knowledge-robot.png" alt="知识机器人"></span>
+          </div>
+          <div class="hero">
+            <h2>想学点什么？丢进来就好</h2>
+            <p>AI 自动出题，答完就能记住</p>
+          </div>
+          <div class="input-area">
+            <div class="input-box">
+              <img class="lead" src="../src/assets/ui-icons/search.png" alt="">
+              <div class="textarea">输入主题，或粘贴一段学习内容…</div>
+            </div>
+            <div class="input-actions">
+              <span class="input-action"><img src="../src/assets/ui-icons/file-text.png" alt="">选择 .txt / .md</span>
+              <span class="input-action"><img src="../src/assets/ui-icons/link.png" alt="">输入网页链接</span>
+            </div>
+            <div class="input-note">网页会读取公开正文；私人链接与内网地址不会访问</div>
+          </div>
+          <button class="btn-primary"><img src="../src/assets/ui-icons/sparkles.png" width="18" height="18" alt="">开始闯关</button>
+          <div class="section">
+            <div class="section-wrap">
+              <div class="section-header">灵感选题</div>
+              <button class="shuffle-btn" onclick="shuffleCards(this)"><span class="icon">🔄</span>换一换</button>
+            </div>
+            <div class="topic-grid" id="grid1">
+              <article class="topic-card" style="--accent:#7C5CFC"><div class="topic-top"><img class="topic-icon" src="../src/assets/topic-icons/graduation-cap.png" alt=""><span class="tag">历史</span></div><h3>十分钟搞懂三国人物关系</h3><p>人物关系一网打尽</p></article>
+              <article class="topic-card" style="--accent:#3EC9A0"><div class="topic-top"><img class="topic-icon" src="../src/assets/topic-icons/orbit.png" alt=""><span class="tag">科学</span></div><h3>太阳系的八大行星</h3><p>基础天文速览</p></article>
+              <article class="topic-card" style="--accent:#FF8C42"><div class="topic-top"><img class="topic-icon" src="../src/assets/topic-icons/brain.png" alt=""><span class="tag">心理</span></div><h3>常见心理学效应</h3><p>看完更懂自己</p></article>
+              <article class="topic-card" style="--accent:#8B7FA3"><div class="topic-top"><img class="topic-icon" src="../src/assets/topic-icons/coffee.png" alt=""><span class="tag">生活</span></div><h3>从种子到一杯咖啡</h3><p>咖啡入门必修</p></article>
+            </div>
+            <div class="section-header">上次看到这里</div>
+            <div class="history-row"><img src="../src/assets/hero-icons/book-open.png" alt=""><div class="history-copy"><strong>三国人物关系</strong><small>10 题 · 5 分钟前</small></div><b class="accuracy">85%</b></div>
+            <div class="history-row"><img src="../src/assets/topic-icons/orbit.png" alt=""><div class="history-copy"><strong>太阳系基础知识</strong><small>8 题 · 2 小时前</small></div><b class="accuracy">70%</b></div>
+          </div>
+        </div>
+        <footer class="bottom-tab">
+          <div class="tab active"><img src="../src/assets/tab-icons/home-active.png" alt="">首页</div>
+          <div class="tab"><img src="../src/assets/tab-icons/history.png" alt="">记录</div>
+          <div class="tab"><img src="../src/assets/tab-icons/profile.png" alt="">我的</div>
+        </footer>
+      </section>
+      <div class="proto-note">点击「换一换」→ 卡片淡出 → 随机换入新主题 → 淡入</div>
+    </div>
+
+    <!-- State 2: After shuffle -->
+    <div class="proto-col">
+      <div class="proto-label">切换后（示意）</div>
+      <section class="phone" style="margin:0">
+        <header class="native-nav">📖 知识闯关</header>
+        <div class="scroll">
+          <div class="knowledge-stage">
+            <i class="orbit outer"></i><i class="orbit inner"></i>
+            <span class="badge b1"><img src="../src/assets/hero-icons/book-open.png" alt=""></span>
+            <span class="badge b2"><img src="../src/assets/hero-icons/atom.png" alt=""></span>
+            <span class="badge b3"><img src="../src/assets/hero-icons/globe.png" alt=""></span>
+            <span class="badge b4"><img src="../src/assets/hero-icons/lightbulb.png" alt=""></span>
+            <span class="robot-shell"><img src="../src/assets/mascot/knowledge-robot.png" alt="知识机器人"></span>
+          </div>
+          <div class="hero">
+            <h2>想学点什么？丢进来就好</h2>
+            <p>AI 自动出题，答完就能记住</p>
+          </div>
+          <div class="input-area">
+            <div class="input-box">
+              <img class="lead" src="../src/assets/ui-icons/search.png" alt="">
+              <div class="textarea">输入主题，或粘贴一段学习内容…</div>
+            </div>
+            <div class="input-actions">
+              <span class="input-action"><img src="../src/assets/ui-icons/file-text.png" alt="">选择 .txt / .md</span>
+              <span class="input-action"><img src="../src/assets/ui-icons/link.png" alt="">输入网页链接</span>
+            </div>
+            <div class="input-note">网页会读取公开正文；私人链接与内网地址不会访问</div>
+          </div>
+          <button class="btn-primary"><img src="../src/assets/ui-icons/sparkles.png" width="18" height="18" alt="">开始闯关</button>
+          <div class="section">
+            <div class="section-wrap">
+              <div class="section-header">灵感选题</div>
+              <button class="shuffle-btn"><span class="icon">🔄</span>换一换</button>
+            </div>
+            <div class="topic-grid">
+              <article class="topic-card" style="--accent:#FF8C42"><div class="topic-top"><img class="topic-icon" src="../src/assets/topic-icons/brain.png" alt=""><span class="tag">文化</span></div><h3>认识中国传统节日</h3><p>传统习俗知多少</p></article>
+              <article class="topic-card" style="--accent:#7C5CFC"><div class="topic-top"><img class="topic-icon" src="../src/assets/topic-icons/graduation-cap.png" alt=""><span class="tag">科技</span></div><h3>人工智能基础概念</h3><p>AI入门不迷路</p></article>
+              <article class="topic-card" style="--accent:#3EC9A0"><div class="topic-top"><img class="topic-icon" src="../src/assets/topic-icons/orbit.png" alt=""><span class="tag">法律</span></div><h3>生活中的法律常识</h3><p>实用法律小百科</p></article>
+              <article class="topic-card" style="--accent:#8B7FA3"><div class="topic-top"><img class="topic-icon" src="../src/assets/topic-icons/coffee.png" alt=""><span class="tag">历史</span></div><h3>挑战世界历史冷知识</h3><p>看看你知道几个</p></article>
+            </div>
+            <div class="section-header">上次看到这里</div>
+            <div class="history-row"><img src="../src/assets/hero-icons/book-open.png" alt=""><div class="history-copy"><strong>三国人物关系</strong><small>10 题 · 5 分钟前</small></div><b class="accuracy">85%</b></div>
+            <div class="history-row"><img src="../src/assets/topic-icons/orbit.png" alt=""><div class="history-copy"><strong>太阳系基础知识</strong><small>8 题 · 2 小时前</small></div><b class="accuracy">70%</b></div>
+          </div>
+        </div>
+        <footer class="bottom-tab">
+          <div class="tab active"><img src="../src/assets/tab-icons/home-active.png" alt="">首页</div>
+          <div class="tab"><img src="../src/assets/tab-icons/history.png" alt="">记录</div>
+          <div class="tab"><img src="../src/assets/tab-icons/profile.png" alt="">我的</div>
+        </footer>
+      </section>
+      <div class="proto-note">从 10 个主题中随机抽取 4 个，每次不同</div>
+    </div>
+  </div>
+
+  <script>
+    const ALL_TOPICS = [
+      { cat:'历史', title:'十分钟搞懂三国人物关系', desc:'人物关系一网打尽', color:'#7C5CFC', icon:'graduation-cap' },
+      { cat:'科学', title:'太阳系的八大行星', desc:'基础天文速览', color:'#3EC9A0', icon:'orbit' },
+      { cat:'心理', title:'常见心理学效应', desc:'看完更懂自己', color:'#FF8C42', icon:'brain' },
+      { cat:'生活', title:'从种子到一杯咖啡', desc:'咖啡入门必修', color:'#8B7FA3', icon:'coffee' },
+      { cat:'文化', title:'认识中国传统节日', desc:'传统习俗知多少', color:'#FF8C42', icon:'brain' },
+      { cat:'科技', title:'人工智能基础概念', desc:'AI入门不迷路', color:'#7C5CFC', icon:'graduation-cap' },
+      { cat:'娱乐', title:'测试你的动漫常识', desc:'二次元冷知识', color:'#3EC9A0', icon:'orbit' },
+      { cat:'职场', title:'学习职场沟通技巧', desc:'说话也有方法论', color:'#8B7FA3', icon:'coffee' },
+      { cat:'历史', title:'挑战世界历史冷知识', desc:'看看你知道几个', color:'#7C5CFC', icon:'graduation-cap' },
+      { cat:'法律', title:'生活中的法律常识', desc:'实用法律小百科', color:'#3EC9A0', icon:'orbit' },
+    ];
+
+    function shuffleCards(btn) {
+      const grid = document.getElementById('grid1');
+      btn.classList.add('spinning');
+      grid.classList.add('shuffle-out');
+
+      setTimeout(() => {
+        const picked = [...ALL_TOPICS].sort(() => Math.random() - .5).slice(0, 4);
+        grid.innerHTML = picked.map(t =>
+          `<article class="topic-card" style="--accent:${t.color}"><div class="topic-top"><img class="topic-icon" src="../src/assets/topic-icons/${t.icon}.png" alt=""><span class="tag">${t.cat}</span></div><h3>${t.title}</h3><p>${t.desc}</p></article>`
+        ).join('');
+        grid.classList.remove('shuffle-out');
+        grid.classList.add('shuffle-in');
+        btn.classList.remove('spinning');
+        setTimeout(() => grid.classList.remove('shuffle-in'), 350);
+      }, 250);
+    }
+  </script>
+</body>
+</html>

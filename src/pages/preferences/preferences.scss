@@ -1,0 +1,59 @@
+.preferences-page {
+  min-height: 100vh;
+  background: var(--parchment);
+  padding-bottom: 40px;
+}
+
+.pref-desc {
+  display: block;
+  margin: 28px 40px 0;
+  font-size: 26px;
+  color: var(--ink-light);
+  line-height: 1.6;
+}
+
+.pref-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin: 24px 40px 0;
+}
+
+.pref-tag {
+  padding: 16px 28px;
+  border-radius: 99px;
+  font-size: 26px;
+  border: 1.5px solid rgba(124, 92, 252, 0.12);
+  color: var(--ink-light);
+  background: var(--card);
+  transition: all 0.2s;
+}
+
+.pref-tag.selected {
+  border-color: var(--spell);
+  background: rgba(124, 92, 252, 0.08);
+  color: var(--spell);
+  font-weight: 600;
+}
+
+.pref-save {
+  margin: 36px 40px 0;
+}
+
+.pref-save-btn {
+  padding: 24px;
+  background: linear-gradient(135deg, var(--spell), var(--spell-glow));
+  border-radius: var(--radius-btn);
+  text-align: center;
+  box-shadow: 0 6px 20px rgba(124, 92, 252, 0.3);
+}
+
+.pref-save-btn.disabled {
+  opacity: 0.5;
+}
+
+.pref-save-text {
+  font-size: 30px;
+  font-weight: 700;
+  color: #fff;
+}

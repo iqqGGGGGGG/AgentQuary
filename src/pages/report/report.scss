@@ -206,11 +206,27 @@
   color: var(--ink);
 }
 
+.summary-loading-text {
+  font-size: 26px;
+  color: var(--ink-light);
+  animation: summary-pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes summary-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+
 .report-actions {
   padding: 16px 40px 48px;
   display: flex;
   flex-direction: column;
   gap: 20px;
+
+  .btn-primary,
+  .btn-secondary {
+    width: 100%;
+  }
 }
 
 .wrong-review-section {

@@ -1,0 +1,615 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>知识闯关 · 我的页面增强原型</title>
+  <link rel="stylesheet" href="./current-ui.css">
+  <style>
+    /* ── Level badge on avatar ── */
+    .avatar-container { position: relative; display: inline-block; cursor: pointer; }
+    .level-badge {
+      position: absolute; right: -2px; bottom: -2px;
+      width: 32px; height: 32px; border-radius: 50%;
+      background: linear-gradient(135deg, #FF8C42, #FFB347);
+      display: grid; place-items: center;
+      border: 2.5px solid rgba(255,255,255,.9);
+      font-size: 13px; font-weight: 800; color: #fff;
+      box-shadow: 0 2px 8px rgba(255,140,66,.4);
+      z-index: 2;
+    }
+    .avatar-edit-overlay {
+      position: absolute; inset: 0; border-radius: 50%;
+      background: rgba(0,0,0,.45); display: grid; place-items: center;
+      opacity: 0; transition: opacity .2s; z-index: 3;
+    }
+    .avatar-container:hover .avatar-edit-overlay,
+    .avatar-container:active .avatar-edit-overlay { opacity: 1; }
+    .avatar-edit-overlay::after { content: '📷'; font-size: 22px; filter: drop-shadow(0 1px 3px rgba(0,0,0,.3)); }
+    .avatar-hint { display: block; margin-top: 6px; font-size: 11px; color: rgba(255,255,255,.7); transition: color .2s; }
+    .avatar-container:hover .avatar-hint { color: #fff; }
+
+    /* ── Editable name ── */
+    .user-name-row { display: inline-flex; align-items: center; gap: 6px; cursor: pointer; padding: 4px 10px; border-radius: 99px; transition: background .2s; }
+    .user-name-row:hover { background: rgba(255,255,255,.15); }
+    .user-name-row h2 { margin: 0; font-size: 18px; }
+    .user-name-row .edit-icon { font-size: 12px; opacity: .6; transition: opacity .2s; }
+    .user-name-row:hover .edit-icon { opacity: 1; }
+    .name-edit-bar {
+      display: none; align-items: center; gap: 8px; margin-top: 8px;
+      padding: 6px 6px 6px 14px; background: rgba(255,255,255,.15);
+      border-radius: 99px; backdrop-filter: blur(4px);
+    }
+    .name-edit-bar.show { display: flex; }
+    .name-edit-bar input {
+      flex: 1; border: 0; background: transparent; color: #fff;
+      font-size: 14px; font-family: var(--font); outline: none;
+    }
+    .name-edit-bar input::placeholder { color: rgba(255,255,255,.5); }
+    .name-edit-bar .name-save-btn {
+      padding: 6px 14px; border-radius: 99px; border: 0;
+      background: linear-gradient(135deg, #FF8C42, #FFB347);
+      color: #fff; font-size: 12px; font-weight: 700;
+      font-family: var(--font); cursor: pointer;
+    }
+
+    /* ── XP progress bar ── */
+    .xp-bar-wrap {
+      margin: 10px 20px 0; padding: 10px 14px;
+      background: rgba(255,255,255,.15); border-radius: 12px;
+      backdrop-filter: blur(4px);
+    }
+    .xp-bar-label { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
+    .xp-bar-label span { font-size: 12px; color: rgba(255,255,255,.85); }
+    .xp-bar-label b { font-size: 12px; color: #fff; }
+    .xp-bar-track { height: 8px; border-radius: 4px; background: rgba(255,255,255,.2); overflow: hidden; }
+    .xp-bar-fill { height: 100%; border-radius: 4px; background: linear-gradient(90deg, #FF8C42, #FFB347); }
+
+    /* ── Stat card gradient tops ── */
+    .stat-card-enhanced {
+      background: var(--card); border-radius: var(--radius-card);
+      padding: 14px 10px; text-align: center;
+      border: 1.5px solid rgba(124,92,252,.06);
+      box-shadow: 0 4px 12px rgba(61,44,94,.05);
+      position: relative; overflow: hidden;
+    }
+    .stat-card-enhanced::before {
+      content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px;
+    }
+    .stat-card-enhanced.purple::before { background: linear-gradient(90deg, #7C5CFC, #B8A9FF); }
+    .stat-card-enhanced.green::before { background: linear-gradient(90deg, #3EC9A0, #6EE7C0); }
+    .stat-card-enhanced.orange::before { background: linear-gradient(90deg, #FF8C42, #FFB347); }
+    .stat-card-enhanced.blue::before { background: linear-gradient(90deg, #4A90D9, #7AB8FF); }
+    .stat-card-enhanced b { display: block; margin-bottom: 3px; font-size: 20px; color: var(--spell); }
+    .stat-card-enhanced span { color: var(--ink-light); font-size: 11px; }
+
+    /* ── Daily goal ring ── */
+    .goal-row { display: flex; align-items: center; gap: 14px; margin: 12px 20px 0; padding: 12px 14px; background: #fff; border: 1.5px solid rgba(124,92,252,.08); border-radius: var(--radius-card); }
+    .goal-ring { width: 48px; height: 48px; border-radius: 50%; background: conic-gradient(var(--spell) 0 66.7%, rgba(124,92,252,.12) 66.7%); display: grid; place-items: center; position: relative; flex-shrink: 0; }
+    .goal-ring::after { content: ''; position: absolute; inset: 5px; border-radius: 50%; background: #fff; }
+    .goal-ring-text { position: relative; z-index: 1; font-size: 12px; font-weight: 800; color: var(--spell); }
+    .goal-info { flex: 1; }
+    .goal-info b { display: block; font-size: 13px; }
+    .goal-info small { color: var(--ink-light); font-size: 11px; }
+    .goal-adjust { padding: 4px 10px; border-radius: 99px; border: 1px solid rgba(124,92,252,.2); color: var(--spell); font-size: 11px; font-weight: 600; }
+
+    /* ── Learning calendar ── */
+    .calendar-card { margin: 12px 20px 0; padding: 14px; background: #fff; border: 1.5px solid rgba(124,92,252,.06); border-radius: var(--radius-card); }
+    .calendar-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+    .calendar-header strong { font-size: 14px; }
+    .calendar-nav { color: var(--ink-light); font-size: 12px; }
+    .calendar-weekdays { display: grid; grid-template-columns: repeat(7,1fr); gap: 2px; margin-bottom: 4px; }
+    .calendar-weekdays span { text-align: center; font-size: 10px; color: var(--ink-light); padding: 4px 0; }
+    .calendar-days { display: grid; grid-template-columns: repeat(7,1fr); gap: 2px; }
+    .calendar-day { text-align: center; padding: 6px 0; font-size: 12px; color: var(--ink); border-radius: 8px; position: relative; }
+    .calendar-day.empty { color: transparent; }
+    .calendar-day.today { background: rgba(124,92,252,.1); color: var(--spell); font-weight: 700; }
+    .calendar-day.has-learned::after { content: ''; position: absolute; bottom: 2px; left: 50%; transform: translateX(-50%); width: 5px; height: 5px; border-radius: 50%; background: var(--spell); }
+    .calendar-day.has-learned.high::after { background: var(--ember); }
+    .calendar-streak { margin-top: 10px; padding-top: 10px; border-top: 1px solid rgba(61,44,94,.06); text-align: center; font-size: 12px; color: var(--ink-light); }
+    .calendar-streak b { color: var(--spell); }
+
+    /* ── Trends chart ── */
+    .trends-card { margin: 12px 20px 0; padding: 14px; background: #fff; border: 1.5px solid rgba(124,92,252,.06); border-radius: var(--radius-card); }
+    .trends-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+    .trends-header strong { font-size: 14px; }
+    .trends-toggle { display: flex; gap: 0; border-radius: 99px; overflow: hidden; border: 1px solid rgba(124,92,252,.15); }
+    .trends-toggle span { padding: 3px 10px; font-size: 10px; color: var(--ink-light); }
+    .trends-toggle span.active { background: var(--spell); color: #fff; }
+    .trends-chart { display: flex; align-items: flex-end; gap: 8px; height: 80px; padding: 0 4px; }
+    .trend-bar-wrap { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px; }
+    .trend-bar { width: 100%; border-radius: 4px 4px 0 0; background: linear-gradient(180deg, var(--spell), var(--spell-glow)); min-height: 4px; }
+    .trend-bar.low { background: linear-gradient(180deg, rgba(124,92,252,.3), rgba(184,169,255,.2)); }
+    .trend-label { font-size: 9px; color: var(--ink-light); }
+
+    /* ── Achievement preview ── */
+    .achievement-preview { margin: 12px 20px 0; padding: 14px; background: #fff; border: 1.5px solid rgba(124,92,252,.06); border-radius: var(--radius-card); }
+    .achievement-preview-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+    .achievement-preview-header strong { font-size: 14px; }
+    .achievement-preview-header a { font-size: 11px; color: var(--spell); text-decoration: none; }
+    .achievement-icons { display: flex; gap: 10px; justify-content: center; }
+    .achievement-icon { width: 48px; height: 48px; border-radius: 14px; display: grid; place-items: center; font-size: 22px; }
+    .achievement-icon.unlocked { background: linear-gradient(135deg, rgba(124,92,252,.12), rgba(184,169,255,.08)); box-shadow: 0 2px 8px rgba(124,92,252,.12); }
+    .achievement-icon.locked { background: rgba(61,44,94,.04); opacity: .45; }
+
+    /* ── Domain distribution ── */
+    .domain-card { margin: 12px 20px 0; padding: 14px; background: #fff; border: 1.5px solid rgba(124,92,252,.06); border-radius: var(--radius-card); }
+    .domain-card strong { display: block; font-size: 14px; margin-bottom: 10px; }
+    .domain-row { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+    .domain-row:last-child { margin-bottom: 0; }
+    .domain-icon { width: 24px; height: 24px; border-radius: 6px; display: grid; place-items: center; font-size: 12px; flex-shrink: 0; }
+    .domain-name { width: 50px; font-size: 12px; color: var(--ink); flex-shrink: 0; }
+    .domain-bar-track { flex: 1; height: 10px; border-radius: 5px; background: rgba(124,92,252,.08); overflow: hidden; }
+    .domain-bar-fill { height: 100%; border-radius: 5px; }
+    .domain-pct { width: 32px; text-align: right; font-size: 12px; font-weight: 700; color: var(--ink); flex-shrink: 0; }
+
+    /* ── Menu badge ── */
+    .menu-badge { display: inline-block; min-width: 16px; height: 16px; padding: 0 4px; border-radius: 99px; background: var(--wrong); color: #fff; font-size: 10px; font-weight: 700; text-align: center; line-height: 16px; }
+
+    /* ── Wrong question cards ── */
+    .wq-stats { display: flex; gap: 16px; margin: 16px 20px 0; }
+    .wq-stat { flex: 1; padding: 12px; background: #fff; border-radius: var(--radius-card); border: 1.5px solid rgba(124,92,252,.06); text-align: center; }
+    .wq-stat b { display: block; font-size: 22px; color: var(--spell); }
+    .wq-stat span { font-size: 11px; color: var(--ink-light); }
+    .wq-filters { display: flex; gap: 8px; margin: 12px 20px 0; overflow-x: auto; }
+    .wq-filter { padding: 6px 14px; border-radius: 99px; font-size: 12px; white-space: nowrap; border: 1.5px solid rgba(124,92,252,.12); color: var(--ink-light); background: #fff; }
+    .wq-filter.active { background: var(--spell); color: #fff; border-color: var(--spell); }
+    .wq-card { margin: 12px 20px 0; padding: 14px; background: #fff; border: 1.5px solid rgba(124,92,252,.06); border-radius: var(--radius-card); }
+    .wq-card-tag { display: inline-block; padding: 2px 8px; border-radius: 99px; font-size: 10px; color: var(--spell); background: rgba(124,92,252,.08); margin-bottom: 8px; }
+    .wq-card-q { font-size: 14px; font-weight: 600; margin-bottom: 8px; line-height: 1.5; }
+    .wq-card-answer { font-size: 12px; margin-bottom: 4px; }
+    .wq-card-answer.wrong { color: var(--wrong); text-decoration: line-through; }
+    .wq-card-answer.correct { color: var(--correct); font-weight: 600; }
+    .wq-card-explain { margin-top: 8px; padding-top: 8px; border-top: 1px dashed rgba(61,44,94,.1); font-size: 12px; color: var(--ink-light); line-height: 1.5; }
+    .wq-card-actions { display: flex; gap: 12px; margin-top: 10px; padding-top: 8px; border-top: 1px solid rgba(61,44,94,.06); }
+    .wq-card-actions span { font-size: 12px; color: var(--spell); font-weight: 500; }
+    .wq-card-actions .remove { color: var(--ink-light); margin-left: auto; }
+    .wq-bottom { margin: 16px 20px; }
+
+    /* ── Achievement full page ── */
+    .ach-progress { margin: 16px 20px 0; }
+    .ach-progress-label { display: flex; justify-content: space-between; font-size: 12px; margin-bottom: 6px; }
+    .ach-progress-label b { color: var(--spell); }
+    .ach-progress-track { height: 8px; border-radius: 4px; background: rgba(124,92,252,.1); overflow: hidden; }
+    .ach-progress-fill { height: 100%; border-radius: 4px; background: linear-gradient(90deg, var(--spell), var(--ember)); }
+    .ach-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 10px; margin: 14px 20px 0; }
+    .ach-item { padding: 14px 8px; background: #fff; border: 1.5px solid rgba(124,92,252,.06); border-radius: var(--radius-card); text-align: center; }
+    .ach-item.unlocked { border-color: rgba(124,92,252,.15); }
+    .ach-item.locked { opacity: .5; }
+    .ach-item-icon { font-size: 28px; margin-bottom: 6px; }
+    .ach-item-name { font-size: 12px; font-weight: 600; margin-bottom: 2px; }
+    .ach-item-desc { font-size: 10px; color: var(--ink-light); }
+    .ach-item-date { font-size: 9px; color: var(--spell); margin-top: 4px; }
+
+    /* ── Preferences page ── */
+    .pref-desc { margin: 16px 20px 0; font-size: 13px; color: var(--ink-light); line-height: 1.5; }
+    .pref-grid { display: flex; flex-wrap: wrap; gap: 10px; margin: 14px 20px 0; }
+    .pref-tag { padding: 10px 18px; border-radius: 99px; font-size: 13px; border: 1.5px solid rgba(124,92,252,.12); color: var(--ink-light); background: #fff; transition: all .2s; }
+    .pref-tag.selected { border-color: var(--spell); background: rgba(124,92,252,.08); color: var(--spell); font-weight: 600; }
+    .pref-save { margin: 20px; }
+
+    /* ── Achievement unlock modal ── */
+    .ach-modal-overlay { position: absolute; inset: 0; z-index: 30; display: grid; place-items: center; background: rgba(0,0,0,.35); backdrop-filter: blur(3px); }
+    .ach-modal { width: 280px; padding: 28px 24px 20px; background: #fff; border-radius: 20px; text-align: center; box-shadow: 0 16px 48px rgba(0,0,0,.2); }
+    .ach-modal-emoji { font-size: 14px; margin-bottom: 4px; }
+    .ach-modal-icon { font-size: 56px; margin: 8px 0 12px; }
+    .ach-modal h3 { margin: 0 0 6px; font-size: 18px; }
+    .ach-modal p { margin: 0 0 18px; font-size: 13px; color: var(--ink-light); line-height: 1.5; }
+    .ach-modal-btn { width: 100%; padding: 12px; border: 0; border-radius: 99px; background: linear-gradient(135deg, var(--spell), var(--spell-glow)); color: #fff; font-size: 15px; font-weight: 700; font-family: var(--font); cursor: pointer; }
+  </style>
+</head>
+<body>
+  <h1 class="prototype-title">知识闯关 · 我的页面增强</h1>
+  <p class="prototype-note">增强设计：等级系统、学习日历、成就徽章、错题本、学习趋势、知识领域分布、兴趣偏好、每日目标。</p>
+  <main class="prototype-grid">
+
+    <!-- ════════════════════════════════════════════════════════════════════ -->
+    <!-- Screen 1 · 我的（上半部分）                                          -->
+    <!-- ════════════════════════════════════════════════════════════════════ -->
+    <section class="phone">
+      <div class="screen-label">页面 1 · 我的（上）</div>
+      <header class="native-nav">我的</header>
+      <div class="scroll">
+        <!-- User card with level badge -->
+        <div class="user-card">
+          <!-- Clickable avatar -->
+          <div class="avatar-container" onclick="this.querySelector('.avatar-edit-overlay').style.opacity=1">
+            <div class="avatar"><img src="../src/assets/mascot/knowledge-robot.png" alt="头像"></div>
+            <span class="level-badge">3</span>
+            <div class="avatar-edit-overlay"></div>
+          </div>
+          <span class="avatar-hint">点击更换头像</span>
+
+          <!-- Clickable name -->
+          <div class="user-name-row" onclick="document.querySelector('.name-edit-bar').classList.toggle('show');this.style.display='none'">
+            <h2>知识探索者</h2>
+            <span class="edit-icon">✏️</span>
+          </div>
+          <!-- Name edit input (hidden by default) -->
+          <div class="name-edit-bar">
+            <input type="text" value="知识探索者" placeholder="输入新昵称" />
+            <button class="name-save-btn">保存</button>
+          </div>
+
+          <!-- XP progress bar -->
+          <div class="xp-bar-wrap">
+            <div class="xp-bar-label">
+              <span>Lv.3 知识学徒</span>
+              <b>450 / 600 XP</b>
+            </div>
+            <div class="xp-bar-track"><div class="xp-bar-fill" style="width:75%"></div></div>
+          </div>
+        </div>
+
+        <!-- Stats grid with colored gradient tops -->
+        <div class="stats-grid">
+          <div class="stat-card-enhanced purple"><b>12</b><span>答题次数</span></div>
+          <div class="stat-card-enhanced green"><b>108</b><span>答题总数</span></div>
+          <div class="stat-card-enhanced orange"><b>78%</b><span>平均正确率</span></div>
+          <div class="stat-card-enhanced blue"><b>5</b><span>学习天数</span></div>
+        </div>
+
+        <!-- Daily goal -->
+        <div class="goal-row">
+          <div class="goal-ring"><span class="goal-ring-text">2/3</span></div>
+          <div class="goal-info">
+            <b>每日目标</b>
+            <small>今日已完成 2 / 3 次闯关</small>
+          </div>
+          <span class="goal-adjust">调整</span>
+        </div>
+
+        <!-- Streak card -->
+        <div class="streak">
+          <span style="font-size:24px">🔥</span>
+          <div>
+            <b style="font-size:13px">最佳连对纪录</b>
+            <div style="color:var(--ember);font-size:14px;font-weight:700">连续答对 7 题</div>
+          </div>
+        </div>
+      </div>
+      <footer class="bottom-tab">
+        <div class="tab"><img src="../src/assets/tab-icons/home.png" alt="">首页</div>
+        <div class="tab"><img src="../src/assets/tab-icons/history.png" alt="">记录</div>
+        <div class="tab active"><img src="../src/assets/tab-icons/profile-active.png" alt="">我的</div>
+      </footer>
+    </section>
+
+    <!-- ════════════════════════════════════════════════════════════════════ -->
+    <!-- Screen 2 · 我的（下半部分）                                          -->
+    <!-- ════════════════════════════════════════════════════════════════════ -->
+    <section class="phone">
+      <div class="screen-label">页面 2 · 我的（下）</div>
+      <header class="native-nav">我的</header>
+      <div class="scroll">
+        <!-- Learning calendar: August 2026, Aug 1 = Saturday -->
+        <div class="calendar-card">
+          <div class="calendar-header">
+            <strong>📅 学习日历</strong>
+            <span class="calendar-nav">◀ 2026年8月 ▶</span>
+          </div>
+          <div class="calendar-weekdays">
+            <span>日</span><span>一</span><span>二</span><span>三</span><span>四</span><span>五</span><span>六</span>
+          </div>
+          <div class="calendar-days">
+            <!-- Row 1: Aug 1 starts on Saturday -->
+            <span class="calendar-day empty"></span>
+            <span class="calendar-day empty"></span>
+            <span class="calendar-day empty"></span>
+            <span class="calendar-day empty"></span>
+            <span class="calendar-day empty"></span>
+            <span class="calendar-day empty"></span>
+            <span class="calendar-day has-learned">1</span>
+            <!-- Row 2 -->
+            <span class="calendar-day has-learned">2</span>
+            <span class="calendar-day">3</span>
+            <span class="calendar-day has-learned">4</span>
+            <span class="calendar-day has-learned high">5</span>
+            <span class="calendar-day">6</span>
+            <span class="calendar-day has-learned">7</span>
+            <span class="calendar-day has-learned high">8</span>
+            <!-- Row 3 -->
+            <span class="calendar-day today">9</span>
+            <span class="calendar-day">10</span>
+            <span class="calendar-day">11</span>
+            <span class="calendar-day">12</span>
+            <span class="calendar-day">13</span>
+            <span class="calendar-day">14</span>
+            <span class="calendar-day">15</span>
+            <!-- Row 4 -->
+            <span class="calendar-day">16</span>
+            <span class="calendar-day">17</span>
+            <span class="calendar-day">18</span>
+            <span class="calendar-day">19</span>
+            <span class="calendar-day">20</span>
+            <span class="calendar-day">21</span>
+            <span class="calendar-day">22</span>
+            <!-- Row 5 -->
+            <span class="calendar-day">23</span>
+            <span class="calendar-day">24</span>
+            <span class="calendar-day">25</span>
+            <span class="calendar-day">26</span>
+            <span class="calendar-day">27</span>
+            <span class="calendar-day">28</span>
+            <span class="calendar-day">29</span>
+            <!-- Row 6 -->
+            <span class="calendar-day">30</span>
+            <span class="calendar-day">31</span>
+            <span class="calendar-day empty"></span>
+            <span class="calendar-day empty"></span>
+            <span class="calendar-day empty"></span>
+            <span class="calendar-day empty"></span>
+            <span class="calendar-day empty"></span>
+          </div>
+          <div class="calendar-streak">当前连续学习 <b>5 天</b></div>
+        </div>
+
+        <!-- Trends chart -->
+        <div class="trends-card">
+          <div class="trends-header">
+            <strong>📊 学习趋势</strong>
+            <div class="trends-toggle"><span class="active">7天</span><span>30天</span></div>
+          </div>
+          <div class="trends-chart">
+            <div class="trend-bar-wrap"><div class="trend-bar" style="height:35px"></div><span class="trend-label">8/3</span></div>
+            <div class="trend-bar-wrap"><div class="trend-bar" style="height:55px"></div><span class="trend-label">8/4</span></div>
+            <div class="trend-bar-wrap"><div class="trend-bar" style="height:70px"></div><span class="trend-label">8/5</span></div>
+            <div class="trend-bar-wrap"><div class="trend-bar low" style="height:15px"></div><span class="trend-label">8/6</span></div>
+            <div class="trend-bar-wrap"><div class="trend-bar" style="height:48px"></div><span class="trend-label">8/7</span></div>
+            <div class="trend-bar-wrap"><div class="trend-bar" style="height:62px"></div><span class="trend-label">8/8</span></div>
+            <div class="trend-bar-wrap"><div class="trend-bar" style="height:30px"></div><span class="trend-label">8/9</span></div>
+          </div>
+        </div>
+
+        <!-- Achievement preview -->
+        <div class="achievement-preview">
+          <div class="achievement-preview-header">
+            <strong>🏅 成就徽章</strong>
+            <a href="#">查看全部 →</a>
+          </div>
+          <div class="achievement-icons">
+            <div class="achievement-icon unlocked">🎯</div>
+            <div class="achievement-icon unlocked">🔥</div>
+            <div class="achievement-icon unlocked">📚</div>
+            <div class="achievement-icon locked">🏆</div>
+            <div class="achievement-icon locked">⭐</div>
+          </div>
+        </div>
+
+        <!-- Domain distribution -->
+        <div class="domain-card">
+          <strong>🧠 知识领域分布</strong>
+          <div class="domain-row">
+            <div class="domain-icon" style="background:rgba(124,92,252,.1)">📖</div>
+            <span class="domain-name">历史</span>
+            <div class="domain-bar-track"><div class="domain-bar-fill" style="width:82%;background:var(--spell)"></div></div>
+            <span class="domain-pct">82%</span>
+          </div>
+          <div class="domain-row">
+            <div class="domain-icon" style="background:rgba(62,201,160,.1)">🔬</div>
+            <span class="domain-name">科学</span>
+            <div class="domain-bar-track"><div class="domain-bar-fill" style="width:75%;background:var(--correct)"></div></div>
+            <span class="domain-pct">75%</span>
+          </div>
+          <div class="domain-row">
+            <div class="domain-icon" style="background:rgba(255,140,66,.1)">🧠</div>
+            <span class="domain-name">心理</span>
+            <div class="domain-bar-track"><div class="domain-bar-fill" style="width:70%;background:var(--ember)"></div></div>
+            <span class="domain-pct">70%</span>
+          </div>
+          <div class="domain-row">
+            <div class="domain-icon" style="background:rgba(74,144,217,.1)">☕</div>
+            <span class="domain-name">生活</span>
+            <div class="domain-bar-track"><div class="domain-bar-fill" style="width:85%;background:#4A90D9"></div></div>
+            <span class="domain-pct">85%</span>
+          </div>
+        </div>
+
+        <!-- Menu with badge -->
+        <div class="menu">
+          <div class="menu-row"><span>📖</span><span>学习记录</span><span>→</span></div>
+          <div class="menu-row"><span>❌</span><span>错题本</span><span><span class="menu-badge">5</span></span><span>→</span></div>
+          <div class="menu-row"><span>🎨</span><span>兴趣偏好</span><span>→</span></div>
+          <div class="menu-row"><span>💡</span><span>关于</span><span>→</span></div>
+        </div>
+      </div>
+      <footer class="bottom-tab">
+        <div class="tab"><img src="../src/assets/tab-icons/home.png" alt="">首页</div>
+        <div class="tab"><img src="../src/assets/tab-icons/history.png" alt="">记录</div>
+        <div class="tab active"><img src="../src/assets/tab-icons/profile-active.png" alt="">我的</div>
+      </footer>
+    </section>
+
+    <!-- ════════════════════════════════════════════════════════════════════ -->
+    <!-- Screen 3 · 错题本                                                    -->
+    <!-- ════════════════════════════════════════════════════════════════════ -->
+    <section class="phone">
+      <div class="screen-label">页面 3 · 错题本</div>
+      <header class="report-nav" style="font-size:15px">❌ 错题本</header>
+      <div class="scroll">
+        <!-- Stats -->
+        <div class="wq-stats">
+          <div class="wq-stat"><b>5</b><span>错题总数</span></div>
+          <div class="wq-stat"><b>3</b><span>涉及主题</span></div>
+        </div>
+
+        <!-- Filters -->
+        <div class="wq-filters">
+          <span class="wq-filter active">全部</span>
+          <span class="wq-filter">三国人物关系</span>
+          <span class="wq-filter">太阳系</span>
+          <span class="wq-filter">心理学效应</span>
+        </div>
+
+        <!-- Wrong question card 1 -->
+        <div class="wq-card">
+          <span class="wq-card-tag">三国人物关系</span>
+          <div class="wq-card-q">赤壁之战发生在哪一年？</div>
+          <div class="wq-card-answer wrong">你的答案：公元 200 年</div>
+          <div class="wq-card-answer correct">✓ 正确答案：公元 208 年</div>
+          <div class="wq-card-explain">💡 赤壁之战发生于建安十三年（208年），孙刘联军以火攻大破曹军，奠定了三国鼎立的基础。</div>
+          <div class="wq-card-actions">
+            <span>🔄 重新练习</span>
+            <span class="remove">✕ 移除</span>
+          </div>
+        </div>
+
+        <!-- Wrong question card 2 -->
+        <div class="wq-card">
+          <span class="wq-card-tag">太阳系</span>
+          <div class="wq-card-q">太阳系中体积最大的行星是哪一颗？</div>
+          <div class="wq-card-answer wrong">你的答案：土星</div>
+          <div class="wq-card-answer correct">✓ 正确答案：木星</div>
+          <div class="wq-card-explain">💡 木星是太阳系体积和质量最大的行星，质量是其他七大行星总和的 2.5 倍。</div>
+          <div class="wq-card-actions">
+            <span>🔄 重新练习</span>
+            <span class="remove">✕ 移除</span>
+          </div>
+        </div>
+
+        <!-- Wrong question card 3 -->
+        <div class="wq-card">
+          <span class="wq-card-tag">心理学效应</span>
+          <div class="wq-card-q">「人们倾向于高估自己对事物的了解程度」叫什么效应？</div>
+          <div class="wq-card-answer wrong">你的答案：锚定效应</div>
+          <div class="wq-card-answer correct">✓ 正确答案：达克效应（邓宁-克鲁格效应）</div>
+          <div class="wq-card-explain">💡 达克效应指能力不足的人倾向于高估自己的水平，而能力强者反而容易低估自己。</div>
+          <div class="wq-card-actions">
+            <span>🔄 重新练习</span>
+            <span class="remove">✕ 移除</span>
+          </div>
+        </div>
+
+        <!-- Bottom button -->
+        <div class="wq-bottom">
+          <button class="btn-primary">🔄 重新练习全部错题</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ════════════════════════════════════════════════════════════════════ -->
+    <!-- Screen 4 · 成就全页                                                  -->
+    <!-- ════════════════════════════════════════════════════════════════════ -->
+    <section class="phone">
+      <div class="screen-label">页面 4 · 成就徽章</div>
+      <header class="report-nav" style="font-size:15px">🏅 成就徽章</header>
+      <div class="scroll">
+        <!-- Progress bar -->
+        <div class="ach-progress">
+          <div class="ach-progress-label">
+            <span>已解锁</span>
+            <b>3 / 10</b>
+          </div>
+          <div class="ach-progress-track"><div class="ach-progress-fill" style="width:30%"></div></div>
+        </div>
+
+        <!-- Achievement grid: 3 unlocked + 6 locked -->
+        <div class="ach-grid">
+          <div class="ach-item unlocked">
+            <div class="ach-item-icon">🎯</div>
+            <div class="ach-item-name">初试牛刀</div>
+            <div class="ach-item-desc">完成第一次闯关</div>
+            <div class="ach-item-date">8月1日解锁</div>
+          </div>
+          <div class="ach-item unlocked">
+            <div class="ach-item-icon">🔥</div>
+            <div class="ach-item-name">连续三天</div>
+            <div class="ach-item-desc">连续学习3天</div>
+            <div class="ach-item-date">8月5日解锁</div>
+          </div>
+          <div class="ach-item unlocked">
+            <div class="ach-item-icon">📚</div>
+            <div class="ach-item-name">博学多才</div>
+            <div class="ach-item-desc">学习5个不同主题</div>
+            <div class="ach-item-date">8月8日解锁</div>
+          </div>
+          <div class="ach-item locked">
+            <div class="ach-item-icon">🏆</div>
+            <div class="ach-item-name">满分达人</div>
+            <div class="ach-item-desc">单次闯关正确率100%</div>
+          </div>
+          <div class="ach-item locked">
+            <div class="ach-item-icon">⭐</div>
+            <div class="ach-item-name">知识大师</div>
+            <div class="ach-item-desc">累计答对100题</div>
+          </div>
+          <div class="ach-item locked">
+            <div class="ach-item-icon">💎</div>
+            <div class="ach-item-name">七日坚持</div>
+            <div class="ach-item-desc">连续学习7天</div>
+          </div>
+          <div class="ach-item locked">
+            <div class="ach-item-icon">🌟</div>
+            <div class="ach-item-name">速度之王</div>
+            <div class="ach-item-desc">2分钟内完成10题</div>
+          </div>
+          <div class="ach-item locked">
+            <div class="ach-item-icon">🎓</div>
+            <div class="ach-item-name">全面发展</div>
+            <div class="ach-item-desc">所有领域正确率超60%</div>
+          </div>
+          <div class="ach-item locked">
+            <div class="ach-item-icon">👑</div>
+            <div class="ach-item-name">知识王者</div>
+            <div class="ach-item-desc">达到Lv.10</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ════════════════════════════════════════════════════════════════════ -->
+    <!-- Screen 5 · 兴趣偏好                                                  -->
+    <!-- ════════════════════════════════════════════════════════════════════ -->
+    <section class="phone">
+      <div class="screen-label">页面 5 · 兴趣偏好</div>
+      <header class="report-nav" style="font-size:15px">🎨 兴趣偏好</header>
+      <div class="scroll">
+        <div class="pref-desc">选择你感兴趣的领域，我们会优先为你推荐相关主题。</div>
+
+        <div class="pref-grid">
+          <span class="pref-tag selected">📖 历史</span>
+          <span class="pref-tag">🔬 科学</span>
+          <span class="pref-tag selected">🧠 心理学</span>
+          <span class="pref-tag">📐 数学</span>
+          <span class="pref-tag">🌍 地理</span>
+          <span class="pref-tag">🎨 艺术</span>
+          <span class="pref-tag">💻 科技</span>
+          <span class="pref-tag selected">☕ 生活</span>
+          <span class="pref-tag">🎵 音乐</span>
+          <span class="pref-tag">📖 文学</span>
+          <span class="pref-tag">🏥 医学</span>
+          <span class="pref-tag">⚽ 体育</span>
+        </div>
+
+        <div class="pref-save">
+          <button class="btn-primary">保存偏好</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ════════════════════════════════════════════════════════════════════ -->
+    <!-- Screen 6 · 成就解锁弹窗                                              -->
+    <!-- ════════════════════════════════════════════════════════════════════ -->
+    <section class="phone">
+      <div class="screen-label">页面 6 · 成就解锁弹窗</div>
+      <header class="native-nav">我的</header>
+      <div class="scroll" style="filter:blur(2px);opacity:.5">
+        <div class="user-card"><div class="avatar"><img src="../src/assets/mascot/knowledge-robot.png" alt=""></div><h2>知识探索者</h2><p>点击头像可更换</p></div>
+        <div class="stats-grid"><div class="stat-card-enhanced purple"><b>12</b><span>答题次数</span></div><div class="stat-card-enhanced green"><b>108</b><span>答题总数</span></div><div class="stat-card-enhanced orange"><b>78%</b><span>平均正确率</span></div><div class="stat-card-enhanced blue"><b>5</b><span>学习天数</span></div></div>
+      </div>
+      <!-- Modal overlay -->
+      <div class="ach-modal-overlay">
+        <div class="ach-modal">
+          <div class="ach-modal-emoji">🎉</div>
+          <div>解锁新成就</div>
+          <div class="ach-modal-icon">🔥</div>
+          <h3>连续三天</h3>
+          <p>你已经连续学习了 3 天！<br>坚持就是胜利！</p>
+          <button class="ach-modal-btn">太棒了！</button>
+        </div>
+      </div>
+    </section>
+
+  </main>
+</body>
+</html>

@@ -30,6 +30,9 @@ app.dependency_overrides[get_db] = override_get_db
 async def setup_db():
     async with test_engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
+    async with TestSessionLocal() as session:
+        from services.achievements import seed_achievements
+        await seed_achievements(session)
     yield
     async with test_engine.begin() as conn:
         await conn.run_sync(Base.metadata.drop_all)

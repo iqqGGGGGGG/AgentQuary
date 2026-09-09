@@ -305,15 +305,70 @@
   white-space: nowrap;
 }
 
-.topic-grid {
+.shuffle-btn {
   display: flex;
-  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 14px;
+  border-radius: 99px;
+  border: 1.5px solid rgba(124, 92, 252, 0.2);
+  background: var(--parchment);
+  flex-shrink: 0;
+  z-index: 1;
+
+  &:active {
+    opacity: 0.7;
+  }
+}
+
+.shuffle-icon {
+  font-size: 24px;
+  transition: transform 0.4s ease;
+}
+
+.shuffle-btn.spinning .shuffle-icon {
+  transform: rotate(180deg);
+}
+
+.shuffle-text {
+  font-size: 22px;
+  color: var(--spell);
+  font-weight: 600;
+}
+
+@keyframes cardOut {
+  0% { opacity: 1; transform: translateY(0) scale(1); }
+  100% { opacity: 0; transform: translateY(-10px) scale(0.94); }
+}
+
+@keyframes cardIn {
+  0% { opacity: 0; transform: translateY(10px) scale(0.94); }
+  100% { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.topic-grid.shuffle-out .topic-card {
+  animation: cardOut 0.22s ease forwards;
+}
+
+.topic-grid.shuffle-in .topic-card {
+  animation: cardIn 0.28s ease forwards;
+}
+
+.topic-grid.shuffle-in .topic-card:nth-child(2) { animation-delay: 0.04s; }
+.topic-grid.shuffle-in .topic-card:nth-child(3) { animation-delay: 0.08s; }
+.topic-grid.shuffle-in .topic-card:nth-child(4) { animation-delay: 0.12s; }
+
+.topic-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 20px;
+  width: 100%;
 }
 
 .topic-card {
   box-sizing: border-box;
-  width: calc(50% - 10px);
+  width: 100%;
+  min-width: 0;
   background: var(--card);
   border-radius: var(--radius-card);
   padding: 22px 20px 24px;

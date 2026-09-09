@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import Taro from '@tarojs/taro'
-import { View, Text, Image } from '@tarojs/components'
+import { View, Text, Image, ScrollView } from '@tarojs/components'
 import { getCurrentQuiz, setQuizResult } from '../../store/quiz'
 import { clearQuizProgress, getQuizProgress, saveQuizProgress } from '../../utils/storage'
 import type { Question, UserAnswer, QuizResult } from '../../types/quiz'
@@ -18,6 +18,13 @@ export default function Quiz() {
   const [userAnswers, setUserAnswers] = useState<UserAnswer[]>([])
   const [streak, setStreak] = useState(0)
   const startTime = useRef(Date.now())
+  const [statusBarHeight] = useState(() => {
+    try {
+      return Taro.getWindowInfo().statusBarHeight || 0
+    } catch {
+      return 0
+    }
+  })
 
   useEffect(() => {
     const saved = getQuizProgress()
@@ -103,6 +110,7 @@ export default function Quiz() {
         session_id: quiz?.session_id || '',
         topic: quiz?.topic || '',
         questions,
+        source_content: quiz?.source_content,
         user_answers: userAnswers,
         start_time: startTime.current,
         end_time: Date.now(),
@@ -138,7 +146,10 @@ export default function Quiz() {
   return (
     <View className='quiz-page'>
       {/* Navbar */}
-      <View className='quiz-navbar'>
+      <View
+        className='quiz-navbar'
+        style={statusBarHeight > 0 ? { paddingTop: `${statusBarHeight + 10}px` } : undefined}
+      >
         <Text className='back' onClick={handleQuit}>← 退出</Text>
         <Text className='progress-text'>第 {currentIndex + 1} 关 / 共 {questions.length} 关</Text>
         <View className='progress-bar-wrap'>
@@ -146,6 +157,7 @@ export default function Quiz() {
         </View>
       </View>
 
+      <ScrollView scrollY className='quiz-content'>
       {/* Encourage Bar */}
       {streak >= 2 && status === 'selecting' && (
         <View className='encourage-bar'>
@@ -227,6 +239,7 @@ export default function Quiz() {
           )
         })}
       </View>
+      </ScrollView>
 
       {/* Bottom Button */}
       <View className='quiz-bottom'>

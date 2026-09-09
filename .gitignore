@@ -14,16 +14,18 @@ __pycache__/
 .env.*
 !.env.example
 server/.env
+server/uploads/
 server/.env.*
 !server/.env.example
 
 # Local editor and tool state
 .vscode/
 .kilo/
+.kilocode/
+.codex/
 project.private.config.json
 
 # Runtime and OS artifacts
 *.log
 .DS_Store
 Thumbs.db
-

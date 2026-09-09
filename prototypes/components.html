@@ -1,825 +1,92 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="zh-CN">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>知识闯关 — 组件库</title>
-<link href="https://fonts.googleapis.com/css2?family=ZCOOL+KuaiLe&family=Noto+Sans+SC:wght@400;500;700&display=swap" rel="stylesheet">
-<style>
-:root {
-  --ink: #3D2C5E;
-  --ink-light: #8B7FA3;
-  --parchment: #FBF7F0;
-  --card: #FFFFFF;
-  --spell: #7C5CFC;
-  --spell-glow: #B8A9FF;
-  --ember: #FF8C42;
-  --correct: #3EC9A0;
-  --wrong: #FF6B6B;
-  --font-display: 'ZCOOL KuaiLe', cursive;
-  --font-body: 'Noto Sans SC', 'PingFang SC', 'Microsoft YaHei', sans-serif;
-  --radius-card: 16px;
-  --radius-btn: 24px;
-}
-*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
-body {
-  font-family: var(--font-body);
-  background: #E8E4F0;
-  color: var(--ink);
-  min-height: 100vh;
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  align-items: flex-start;
-  gap: 32px;
-  padding: 32px 16px;
-}
-body::before {
-  content: '知识闯关 · 组件库';
-  display: block;
-  width: 100%;
-  text-align: center;
-  font-family: var(--font-display);
-  font-size: 24px;
-  color: var(--spell);
-  margin-bottom: 8px;
-}
-body::after {
-  content: '所有可复用组件的多种状态展示';
-  display: block;
-  width: 100%;
-  text-align: center;
-  font-size: 13px;
-  color: var(--ink-light);
-  margin-bottom: 16px;
-}
-
-/* Component Showcase Container */
-.showcase {
-  width: 375px;
-  background: var(--parchment);
-  border-radius: 24px;
-  overflow: hidden;
-  box-shadow: 0 8px 40px rgba(61,44,94,0.12);
-  flex-shrink: 0;
-}
-.showcase-title {
-  background: linear-gradient(135deg, var(--spell), var(--spell-glow));
-  color: #fff;
-  padding: 14px 20px;
-  font-family: var(--font-display);
-  font-size: 16px;
-}
-.showcase-body { padding: 20px; }
-.showcase-section { margin-bottom: 24px; }
-.showcase-section:last-child { margin-bottom: 0; }
-.showcase-label {
-  font-size: 11px;
-  color: var(--ink-light);
-  text-transform: uppercase;
-  letter-spacing: 1px;
-  margin-bottom: 10px;
-  font-weight: 500;
-}
-.showcase-row {
-  display: flex;
-  gap: 10px;
-  flex-wrap: wrap;
-  margin-bottom: 10px;
-}
-.showcase-row > * { flex: 1; min-width: 0; }
-
-/* ── Navbar Component ── */
-.navbar {
-  background: linear-gradient(135deg, var(--spell), var(--spell-glow));
-  color: #fff;
-  padding: 12px 16px;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 16px;
-  font-weight: 500;
-  min-height: 44px;
-  border-radius: 12px;
-}
-.navbar-title { font-family: var(--font-display); font-size: 18px; flex: 1; text-align: center; }
-.navbar-back { font-size: 18px; opacity: 0.85; }
-.navbar-right { width: 24px; }
-
-/* Quiz Navbar */
-.quiz-navbar {
-  background: var(--card);
-  padding: 10px 16px;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  font-size: 14px;
-  border-radius: 12px;
-  border: 1px solid rgba(61,44,94,0.06);
-}
-.quiz-navbar .back { color: var(--spell); font-size: 14px; }
-.quiz-navbar .progress-text { color: var(--ink-light); font-size: 13px; }
-.quiz-navbar .progress-bar-wrap {
-  flex: 1; height: 6px; background: rgba(124,92,252,0.12);
-  border-radius: 3px; overflow: hidden;
-}
-.quiz-navbar .progress-bar-fill {
-  height: 100%; background: linear-gradient(90deg, var(--spell), var(--spell-glow));
-  border-radius: 3px; transition: width 0.6s ease;
-}
-
-/* ── Option Card Component ── */
-.option-card {
-  display: flex; align-items: center; gap: 12px;
-  padding: 14px 16px; background: var(--card);
-  border: 2px solid transparent; border-radius: var(--radius-card);
-  cursor: pointer; transition: all 0.2s;
-  box-shadow: 1px 2px 0 rgba(61,44,94,0.04);
-}
-.option-card:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(61,44,94,0.08); }
-.option-card.selected { border-color: var(--spell); background: rgba(124,92,252,0.04); }
-.option-card.correct { border-color: var(--correct); background: rgba(62,201,160,0.06); }
-.option-card.wrong { border-color: var(--wrong); background: rgba(255,107,107,0.06); }
-.option-letter {
-  width: 28px; height: 28px; border-radius: 8px;
-  background: rgba(124,92,252,0.1); display: flex;
-  align-items: center; justify-content: center;
-  font-size: 13px; font-weight: 700; color: var(--spell);
-  flex-shrink: 0; transition: all 0.2s;
-}
-.option-card.selected .option-letter { background: var(--spell); color: #fff; }
-.option-card.correct .option-letter { background: var(--correct); color: #fff; }
-.option-card.wrong .option-letter { background: var(--wrong); color: #fff; }
-.option-text { font-size: 15px; flex: 1; }
-.option-check {
-  width: 20px; height: 20px; border-radius: 50%;
-  border: 2px solid rgba(124,92,252,0.2); display: flex;
-  align-items: center; justify-content: center;
-  font-size: 12px; flex-shrink: 0; transition: all 0.2s;
-}
-.option-card.selected .option-check { border-color: var(--spell); background: var(--spell); color: #fff; }
-
-/* ── Progress Bar Component ── */
-.progress-bar-demo {
-  display: flex; align-items: center; gap: 10px;
-}
-.progress-bar-wrap {
-  flex: 1; height: 8px; background: rgba(124,92,252,0.12);
-  border-radius: 4px; overflow: hidden;
-}
-.progress-bar-fill {
-  height: 100%; background: linear-gradient(90deg, var(--spell), var(--spell-glow));
-  border-radius: 4px; transition: width 0.6s ease;
-}
-.progress-label { font-size: 13px; color: var(--ink-light); min-width: 36px; text-align: right; }
-
-/* ── Star Rating Component ── */
-.stars { font-size: 24px; letter-spacing: 4px; }
-
-/* ── Toast Component ── */
-.toast {
-  display: inline-flex; align-items: center; gap: 8px;
-  padding: 10px 20px; border-radius: 12px;
-  font-size: 14px; font-weight: 500;
-  box-shadow: 0 4px 16px rgba(61,44,94,0.15);
-}
-.toast.success { background: var(--correct); color: #fff; }
-.toast.error { background: var(--wrong); color: #fff; }
-.toast.info { background: var(--card); color: var(--ink); border: 1px solid rgba(61,44,94,0.1); }
-
-/* ── Empty State Component ── */
-.empty-state {
-  text-align: center; padding: 32px 20px;
-  background: var(--card); border-radius: var(--radius-card);
-}
-.empty-icon { font-size: 48px; margin-bottom: 12px; }
-.empty-title { font-size: 15px; font-weight: 700; margin-bottom: 4px; }
-.empty-sub { font-size: 13px; color: var(--ink-light); }
-
-/* ── Sprite Component (SVG Mascot) ── */
-.sprite-row { display: flex; gap: 20px; justify-content: center; align-items: flex-end; }
-.sprite-wrap { text-align: center; }
-.sprite-wrap .sprite-label { font-size: 11px; color: var(--ink-light); margin-top: 8px; }
-.mascot-glow { animation: mascot-glow 3s ease-in-out infinite; }
-@keyframes mascot-glow { 0%, 100% { opacity: 0.3; } 50% { opacity: 0.6; } }
-.mascot-bounce { animation: mascot-bounce 0.6s ease infinite; }
-@keyframes mascot-bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-6px); } }
-.mascot-hat-star { animation: hat-sparkle 2s ease-in-out infinite; }
-@keyframes hat-sparkle { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.6; transform: scale(0.85); } }
-
-/* ── Button Components ── */
-.btn-primary {
-  display: inline-block; padding: 14px 32px;
-  background: linear-gradient(135deg, var(--spell), var(--spell-glow));
-  color: #fff; border: none; border-radius: var(--radius-btn);
-  font-size: 16px; font-weight: 700; font-family: var(--font-body);
-  cursor: pointer; transition: transform 0.15s, box-shadow 0.15s;
-  box-shadow: 0 4px 16px rgba(124,92,252,0.3);
-}
-.btn-primary:hover { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(124,92,252,0.4); }
-.btn-primary:disabled { opacity: 0.4; cursor: not-allowed; }
-.btn-secondary {
-  display: inline-block; padding: 12px 24px;
-  background: transparent; color: var(--spell);
-  border: 1.5px solid rgba(124,92,252,0.25); border-radius: var(--radius-btn);
-  font-size: 14px; font-weight: 500; font-family: var(--font-body);
-  cursor: pointer; transition: all 0.2s;
-}
-.btn-secondary:hover { background: rgba(124,92,252,0.04); }
-.btn-outline {
-  display: inline-flex; align-items: center; gap: 4px;
-  padding: 8px 14px; border: 1.5px solid rgba(124,92,252,0.25);
-  border-radius: 20px; background: transparent; color: var(--spell);
-  font-size: 13px; font-family: var(--font-body); cursor: pointer;
-  transition: all 0.2s;
-}
-.btn-outline:hover { background: rgba(124,92,252,0.06); }
-.btn-text-link {
-  display: inline-block; font-size: 13px; color: var(--ink-light);
-  text-decoration: none; cursor: pointer; padding: 4px;
-}
-.btn-text-link:hover { color: var(--spell); }
-
-/* ── Topic Card Component ── */
-.topic-card {
-  background: var(--card); border-radius: var(--radius-card);
-  padding: 14px 12px; cursor: pointer;
-  transition: transform 0.2s, box-shadow 0.2s;
-  border: 1.5px solid rgba(124,92,252,0.08);
-  position: relative; overflow: hidden;
-}
-.topic-card::before {
-  content: ''; position: absolute;
-  top: 0; left: 0; right: 0; height: 3px;
-  background: linear-gradient(90deg, var(--spell), var(--ember));
-  opacity: 0; transition: opacity 0.2s;
-}
-.topic-card:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(61,44,94,0.1); }
-.topic-card:hover::before { opacity: 1; }
-.topic-icon { width: 36px; height: 36px; border-radius: 10px; display: flex; align-items: center; justify-content: center; margin-bottom: 8px; }
-.topic-icon.t-history { background: rgba(124,92,252,0.1); color: var(--spell); }
-.topic-icon.t-science { background: rgba(62,201,160,0.12); color: var(--correct); }
-.topic-title { font-size: 14px; font-weight: 700; line-height: 1.4; }
-.topic-meta { font-size: 11px; color: var(--ink-light); margin-top: 4px; }
-
-/* ── Input Component ── */
-.input-box {
-  display: flex; align-items: center;
-  background: var(--card); border: 2px solid rgba(124,92,252,0.15);
-  border-radius: var(--radius-card); padding: 12px 16px; gap: 8px;
-  transition: border-color 0.2s;
-}
-.input-box:focus-within { border-color: var(--spell); box-shadow: 0 0 0 3px rgba(124,92,252,0.1); }
-.input-box input {
-  flex: 1; border: none; outline: none; font-size: 14px;
-  font-family: var(--font-body); color: var(--ink); background: transparent;
-}
-
-/* ── Feedback Card Component ── */
-.feedback-card { padding: 18px; border-radius: var(--radius-card); }
-.feedback-card.correct-fb { background: rgba(62,201,160,0.08); border: 1.5px solid rgba(62,201,160,0.25); }
-.feedback-card.wrong-fb { background: rgba(255,107,107,0.08); border: 1.5px solid rgba(255,107,107,0.25); }
-.feedback-title { font-family: var(--font-display); font-size: 20px; margin-bottom: 8px; }
-.feedback-card.correct-fb .feedback-title { color: var(--correct); }
-.feedback-card.wrong-fb .feedback-title { color: var(--wrong); }
-.feedback-body { font-size: 14px; line-height: 1.7; color: var(--ink); }
-
-/* ── History Card Component ── */
-.history-card {
-  padding: 14px; background: var(--card);
-  border-radius: var(--radius-card);
-  border: 1.5px solid rgba(124,92,252,0.06);
-  cursor: pointer; transition: all 0.2s;
-}
-.history-card:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(61,44,94,0.08); }
-.history-card-top { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
-.history-card-trophy { font-size: 18px; }
-.history-card-topic { font-size: 15px; font-weight: 700; flex: 1; }
-.history-card-stats { font-size: 12px; color: var(--ink-light); margin-bottom: 10px; }
-.history-card-divider { height: 1px; background: rgba(61,44,94,0.06); margin-bottom: 10px; }
-.history-card-action { font-size: 13px; color: var(--spell); font-weight: 500; }
-
-/* ── Accuracy Ring Component ── */
-.accuracy-ring { width: 100px; height: 100px; position: relative; margin: 0 auto; }
-.accuracy-ring svg { width: 100%; height: 100%; transform: rotate(-90deg); }
-.accuracy-ring .ring-bg { fill: none; stroke: rgba(124,92,252,0.1); stroke-width: 8; }
-.accuracy-ring .ring-fill {
-  fill: none; stroke: var(--spell); stroke-width: 8;
-  stroke-linecap: round; stroke-dasharray: 251.3;
-  stroke-dashoffset: 37.7; /* 85% */
-  transition: stroke-dashoffset 1s ease;
-}
-.accuracy-ring .ring-text {
-  position: absolute; inset: 0;
-  display: flex; flex-direction: column;
-  align-items: center; justify-content: center;
-}
-.accuracy-ring .ring-number {
-  font-family: var(--font-display); font-size: 26px;
-  color: var(--spell); line-height: 1;
-}
-.accuracy-ring .ring-label { font-size: 11px; color: var(--ink-light); margin-top: 2px; }
-
-/* ── Encourage Bar Component ── */
-.encourage-bar {
-  padding: 10px 14px; background: rgba(255,140,66,0.08);
-  border-left: 3px solid var(--ember); border-radius: 0 10px 10px 0;
-  font-size: 13px; color: var(--ember); font-weight: 500;
-  display: flex; align-items: center; gap: 6px;
-}
-
-/* ── Summary Card Component ── */
-.summary-card {
-  padding: 16px; background: var(--card);
-  border-radius: var(--radius-card);
-  border: 1.5px solid rgba(124,92,252,0.1);
-  font-size: 13px; line-height: 1.7; color: var(--ink);
-  position: relative;
-}
-.summary-card::before {
-  content: 'AI 总结'; position: absolute; top: -9px; left: 14px;
-  font-size: 11px; color: var(--spell); background: var(--card);
-  padding: 0 6px; font-weight: 700;
-}
-
-/* ── Section Header Component ── */
-.section-header {
-  display: flex; align-items: center; gap: 12px;
-  padding: 8px 0; font-size: 14px; font-weight: 700; color: var(--ink);
-}
-.section-header::before,
-.section-header::after {
-  content: ''; flex: 1; height: 1px;
-  background: linear-gradient(90deg, transparent, rgba(124,92,252,0.2), transparent);
-}
-
-/* Responsive: showcase width is fixed, only body wrapping changes */
-@media (max-width: 768px) {
-  body { flex-direction: column; align-items: center; gap: 20px; padding: 16px 8px; }
-}
-</style>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>知识闯关 · 当前项目组件状态</title>
+  <link rel="stylesheet" href="./current-ui.css">
 </head>
 <body>
-
-<!-- SVG Icon Definitions -->
-<svg xmlns="http://www.w3.org/2000/svg" style="display:none">
-  <defs>
-    <symbol id="ic-home" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 21v-8a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v8"/><path d="M3 10a2 2 0 0 1 .709-1.528l7-5.999a2 2 0 0 1 2.582 0l7 5.999A2 2 0 0 1 21 10v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></symbol>
-    <symbol id="ic-history" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M12 7v5l4 2"/></symbol>
-    <symbol id="ic-search" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></symbol>
-    <symbol id="ic-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></symbol>
-    <symbol id="ic-x" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></symbol>
-    <symbol id="ic-sparkles" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9.937 15.5A2 2 0 0 0 8.5 14.063l-6.135-1.582a.5.5 0 0 1 0-.962L8.5 9.936A2 2 0 0 0 9.937 8.5l1.582-6.135a.5.5 0 0 1 .963 0L14.063 8.5A2 2 0 0 0 15.5 9.937l6.135 1.581a.5.5 0 0 1 0 .964L15.5 14.063a2 2 0 0 0-1.437 1.437l-1.582 6.135a.5.5 0 0 1-.963 0z"/><path d="M20 3v4"/><path d="M22 5h-4"/></symbol>
-    <symbol id="ic-book" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 7v14"/><path d="M3 18a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h5a4 4 0 0 1 4 4 4 4 0 0 1 4-4h5a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1h-6a3 3 0 0 0-3 3 3 3 0 0 0-3-3z"/></symbol>
-    <symbol id="ic-arrow-left" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m12 19-7-7 7-7"/><path d="M19 12H5"/></symbol>
-    <symbol id="ic-arrow-right" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></symbol>
-    <symbol id="ic-brain" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5a3 3 0 1 0-5.997.125 4 4 0 0 0-2.526 5.77 4 4 0 0 0 .556 6.588A4 4 0 1 0 12 18Z"/><path d="M12 5a3 3 0 1 1 5.997.125 4 4 0 0 1 2.526 5.77 4 4 0 0 1-.556 6.588A4 4 0 1 1 12 18Z"/><path d="M15 13a4.5 4.5 0 0 1-3-4 4.5 4.5 0 0 1-3 4"/><path d="M17.599 6.5a3 3 0 0 0 .399-1.375"/><path d="M6.003 5.125A3 3 0 0 0 6.401 6.5"/><path d="M3.477 10.896a4 4 0 0 1 .585-.396"/><path d="M19.938 10.5a4 4 0 0 1 .585.396"/><path d="M6 18a4 4 0 0 1-1.967-.516"/><path d="M19.967 17.484A4 4 0 0 1 18 18"/></symbol>
-    <symbol id="ic-lightbulb" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A6 6 0 0 0 6 8c0 1 .2 2.2 1.5 3.5.7.7 1.3 1.5 1.5 2.5"/><path d="M9 18h6"/><path d="M10 22h4"/></symbol>
-    <symbol id="ic-graduation" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.42 10.922a1 1 0 0 0-.019-1.838L12.83 5.18a2 2 0 0 0-1.66 0L2.6 9.08a1 1 0 0 0 0 1.832l8.57 3.908a2 2 0 0 0 1.66 0z"/><path d="M22 10v6"/><path d="M6 12.5V16a6 3 0 0 0 12 0v-3.5"/></symbol>
-    <symbol id="ic-file-text" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/><path d="M10 9H8"/><path d="M16 13H8"/><path d="M16 17H8"/></symbol>
-    <symbol id="ic-star" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></symbol>
-    <symbol id="ic-star-fill" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="1"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></symbol>
-    <symbol id="ic-trophy" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/></symbol>
-    <symbol id="ic-link" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></symbol>
-    <symbol id="ic-refresh" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/><path d="M8 16H3v5"/></symbol>
-    <symbol id="ic-share" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" x2="15.42" y1="13.51" y2="17.49"/><line x1="15.41" x2="8.59" y1="6.51" y2="10.49"/></symbol>
-    <symbol id="ic-clock" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></symbol>
-    <symbol id="ic-notebook" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 6h4"/><path d="M2 10h4"/><path d="M2 14h4"/><path d="M2 18h4"/><rect width="16" height="20" x="4" y="2" rx="2"/><path d="M9.5 8h5"/><path d="M9.5 12H16"/><path d="M9.5 16H14"/></symbol>
-    <symbol id="ic-upload" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" x2="12" y1="3" y2="15"/></symbol>
-    <symbol id="ic-document" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/></symbol>
-    <symbol id="ic-user" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></symbol>
-    <symbol id="ic-fire" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/></symbol>
-    <symbol id="ic-chevron-right" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></symbol>
-  </defs>
-</svg>
-
-<!-- SVG Icon Utility -->
-<style>
-.ic { display: inline-flex; align-items: center; justify-content: center; vertical-align: middle; flex-shrink: 0; }
-.ic svg { display: block; }
-.ic-sm { width: 16px; height: 16px; }
-.ic-md { width: 20px; height: 20px; }
-.ic-lg { width: 24px; height: 24px; }
-</style>
-
-<!-- ═══ 1. 导航栏 ═══ -->
-<section class="showcase">
-  <div class="showcase-title">导航栏组件</div>
-  <div class="showcase-body">
-    <div class="showcase-section">
-      <div class="showcase-label">默认导航（首页）</div>
-      <div class="navbar">
-        <div class="navbar-title">知识闯关</div>
-      </div>
-    </div>
-    <div class="showcase-section">
-      <div class="showcase-label">答题导航（带返回 + 进度）</div>
-      <div class="quiz-navbar">
-        <span class="back">← 退出</span>
-        <span class="progress-text">第 3 关 / 共 10 关</span>
-        <div class="progress-bar-wrap"><div class="progress-bar-fill" style="width:30%"></div></div>
-      </div>
-    </div>
-    <div class="showcase-section">
-      <div class="showcase-label">带返回按钮导航</div>
-      <div class="navbar">
-        <span class="navbar-back">←</span>
-        <div class="navbar-title">输入学习内容</div>
-        <div class="navbar-right"></div>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- ═══ 2. 选项卡片 ═══ -->
-<section class="showcase">
-  <div class="showcase-title">选项卡片组件</div>
-  <div class="showcase-body">
-    <div class="showcase-section">
-      <div class="showcase-label">默认状态</div>
-      <div class="option-card">
-        <span class="option-letter">A</span>
-        <span class="option-text">蜀汉</span>
-        <span class="option-check"></span>
-      </div>
-    </div>
-    <div class="showcase-section">
-      <div class="showcase-label">选中状态</div>
-      <div class="option-card selected">
-        <span class="option-letter">B</span>
-        <span class="option-text">东吴</span>
-        <span class="option-check"><svg class="ic ic-sm" style="color:#fff"><use href="#ic-check"/></svg></span>
-      </div>
-    </div>
-    <div class="showcase-section">
-      <div class="showcase-label">正确状态</div>
-      <div class="option-card correct">
-        <span class="option-letter">A</span>
-        <span class="option-text">蜀汉</span>
-        <span class="option-check"><svg class="ic ic-sm" style="color:#fff"><use href="#ic-check"/></svg></span>
-      </div>
-    </div>
-    <div class="showcase-section">
-      <div class="showcase-label">错误状态</div>
-      <div class="option-card wrong">
-        <span class="option-letter">B</span>
-        <span class="option-text">东吴</span>
-        <span class="option-check"><svg class="ic ic-sm" style="color:#fff"><use href="#ic-x"/></svg></span>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- ═══ 3. 进度条 ═══ -->
-<section class="showcase">
-  <div class="showcase-title">进度条组件</div>
-  <div class="showcase-body">
-    <div class="showcase-section">
-      <div class="showcase-label">0%</div>
-      <div class="progress-bar-demo">
-        <div class="progress-bar-wrap"><div class="progress-bar-fill" style="width:0%"></div></div>
-        <span class="progress-label">0%</span>
-      </div>
-    </div>
-    <div class="showcase-section">
-      <div class="showcase-label">30%</div>
-      <div class="progress-bar-demo">
-        <div class="progress-bar-wrap"><div class="progress-bar-fill" style="width:30%"></div></div>
-        <span class="progress-label">30%</span>
-      </div>
-    </div>
-    <div class="showcase-section">
-      <div class="showcase-label">50%</div>
-      <div class="progress-bar-demo">
-        <div class="progress-bar-wrap"><div class="progress-bar-fill" style="width:50%"></div></div>
-        <span class="progress-label">50%</span>
-      </div>
-    </div>
-    <div class="showcase-section">
-      <div class="showcase-label">100%</div>
-      <div class="progress-bar-demo">
-        <div class="progress-bar-wrap"><div class="progress-bar-fill" style="width:100%"></div></div>
-        <span class="progress-label">100%</span>
-      </div>
-    </div>
-    <div class="showcase-section">
-      <div class="showcase-label">正确率圆环（85%）</div>
-      <div class="accuracy-ring">
-        <svg viewBox="0 0 100 100">
-          <circle class="ring-bg" cx="50" cy="50" r="40"/>
-          <circle class="ring-fill" cx="50" cy="50" r="40"/>
-        </svg>
-        <div class="ring-text">
-          <span class="ring-number">85%</span>
-          <span class="ring-label">正确率</span>
-        </div>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- ═══ 4. 星星评级 ═══ -->
-<section class="showcase">
-  <div class="showcase-title">星星评级组件</div>
-  <div class="showcase-body">
-    <div class="showcase-section">
-      <div class="showcase-label">0 星</div>
-      <div style="display:flex;gap:4px;">
-        <svg class="ic ic-lg" style="color:var(--ink-light);opacity:0.3"><use href="#ic-star"/></svg>
-        <svg class="ic ic-lg" style="color:var(--ink-light);opacity:0.3"><use href="#ic-star"/></svg>
-        <svg class="ic ic-lg" style="color:var(--ink-light);opacity:0.3"><use href="#ic-star"/></svg>
-        <svg class="ic ic-lg" style="color:var(--ink-light);opacity:0.3"><use href="#ic-star"/></svg>
-        <svg class="ic ic-lg" style="color:var(--ink-light);opacity:0.3"><use href="#ic-star"/></svg>
-      </div>
-    </div>
-    <div class="showcase-section">
-      <div class="showcase-label">3 星</div>
-      <div style="display:flex;gap:4px;">
-        <svg class="ic ic-lg" style="color:var(--ember)"><use href="#ic-star-fill"/></svg>
-        <svg class="ic ic-lg" style="color:var(--ember)"><use href="#ic-star-fill"/></svg>
-        <svg class="ic ic-lg" style="color:var(--ember)"><use href="#ic-star-fill"/></svg>
-        <svg class="ic ic-lg" style="color:var(--ink-light);opacity:0.3"><use href="#ic-star"/></svg>
-        <svg class="ic ic-lg" style="color:var(--ink-light);opacity:0.3"><use href="#ic-star"/></svg>
-      </div>
-    </div>
-    <div class="showcase-section">
-      <div class="showcase-label">5 星</div>
-      <div style="display:flex;gap:4px;">
-        <svg class="ic ic-lg" style="color:var(--ember)"><use href="#ic-star-fill"/></svg>
-        <svg class="ic ic-lg" style="color:var(--ember)"><use href="#ic-star-fill"/></svg>
-        <svg class="ic ic-lg" style="color:var(--ember)"><use href="#ic-star-fill"/></svg>
-        <svg class="ic ic-lg" style="color:var(--ember)"><use href="#ic-star-fill"/></svg>
-        <svg class="ic ic-lg" style="color:var(--ember)"><use href="#ic-star-fill"/></svg>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- ═══ 5. Toast 提示 ═══ -->
-<section class="showcase">
-  <div class="showcase-title">Toast 提示组件</div>
-  <div class="showcase-body">
-    <div class="showcase-section">
-      <div class="showcase-label">成功提示</div>
-      <div class="toast success">
-        <svg class="ic ic-md" style="color:#fff"><use href="#ic-check"/></svg>
-        题目生成成功
-      </div>
-    </div>
-    <div class="showcase-section">
-      <div class="showcase-label">失败提示</div>
-      <div class="toast error">
-        <svg class="ic ic-md" style="color:#fff"><use href="#ic-x"/></svg>
-        网络请求失败
-      </div>
-    </div>
-    <div class="showcase-section">
-      <div class="showcase-label">信息提示</div>
-      <div class="toast info">
-        <svg class="ic ic-md" style="color:var(--spell)"><use href="#ic-sparkles"/></svg>
-        内容不能为空
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- ═══ 6. 空状态 ═══ -->
-<section class="showcase">
-  <div class="showcase-title">空状态组件</div>
-  <div class="showcase-body">
-    <div class="empty-state">
-      <div style="margin-bottom:12px;">
-        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="var(--ink-light)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 7v14"/><path d="M3 18a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h5a4 4 0 0 1 4 4 4 4 0 0 1 4-4h5a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1h-6a3 3 0 0 0-3 3 3 3 0 0 0-3-3z"/></svg>
-      </div>
-      <div class="empty-title">还没有学习记录</div>
-      <div class="empty-sub">输入一个主题，开始你的第一次闯关吧</div>
-    </div>
-  </div>
-</section>
-
-<!-- ═══ 7. 精灵角色 ═══ -->
-<section class="showcase">
-  <div class="showcase-title">精灵角色组件</div>
-  <div class="showcase-body">
-    <div class="sprite-row">
-      <div class="sprite-wrap">
-        <svg width="64" height="64" viewBox="0 0 100 100">
-          <defs><linearGradient id="mg" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#B8A9FF"/><stop offset="100%" stop-color="#7C5CFC"/></linearGradient></defs>
-          <circle class="mascot-glow" cx="50" cy="52" r="42" fill="var(--spell-glow)" opacity="0.2"/>
-          <circle cx="50" cy="55" r="28" fill="url(#mg)"/><ellipse cx="50" cy="60" rx="18" ry="14" fill="#fff" opacity="0.15"/>
-          <polygon points="50,8 36,32 64,32" fill="var(--ember)"/><rect x="33" y="30" width="34" height="5" rx="2.5" fill="var(--ember)" opacity="0.8"/>
-          <g class="mascot-hat-star"><polygon points="50,12 52,18 58,18 53,22 55,28 50,24 45,28 47,22 42,18 48,18" fill="#FFE0A0"/></g>
-          <ellipse cx="40" cy="50" rx="6" ry="7" fill="#fff"/><ellipse cx="60" cy="50" rx="6" ry="7" fill="#fff"/>
-          <circle cx="41" cy="51" r="3.5" fill="var(--ink)"/><circle cx="61" cy="51" r="3.5" fill="var(--ink)"/>
-          <circle cx="43" cy="49" r="1.5" fill="#fff"/><circle cx="63" cy="49" r="1.5" fill="#fff"/>
-          <path d="M34 43 Q40 40 46 43" stroke="var(--ink)" stroke-width="1.5" fill="none" stroke-linecap="round"/>
-          <path d="M54 43 Q60 40 66 43" stroke="var(--ink)" stroke-width="1.5" fill="none" stroke-linecap="round"/>
-          <path d="M44 62 Q50 68 56 62" stroke="var(--ink)" stroke-width="1.5" fill="none" stroke-linecap="round"/>
-          <ellipse cx="33" cy="58" rx="5" ry="3" fill="#FFB8B8" opacity="0.5"/><ellipse cx="67" cy="58" rx="5" ry="3" fill="#FFB8B8" opacity="0.5"/>
-          <ellipse cx="22" cy="55" rx="6" ry="10" fill="var(--spell-glow)" opacity="0.3" transform="rotate(-15,22,55)"/>
-          <ellipse cx="78" cy="55" rx="6" ry="10" fill="var(--spell-glow)" opacity="0.3" transform="rotate(15,78,55)"/>
-        </svg>
-        <div class="sprite-label">正常</div>
-      </div>
-      <div class="sprite-wrap">
-        <svg class="mascot-bounce" width="64" height="64" viewBox="0 0 100 100">
-          <defs><linearGradient id="mgh" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#A8F0D4"/><stop offset="100%" stop-color="#3EC9A0"/></linearGradient></defs>
-          <circle cx="50" cy="52" r="42" fill="var(--correct)" opacity="0.15"/>
-          <circle cx="50" cy="55" r="28" fill="url(#mgh)"/><ellipse cx="50" cy="60" rx="18" ry="14" fill="#fff" opacity="0.15"/>
-          <polygon points="50,8 36,32 64,32" fill="var(--ember)"/><rect x="33" y="30" width="34" height="5" rx="2.5" fill="var(--ember)" opacity="0.8"/>
-          <polygon points="50,12 52,18 58,18 53,22 55,28 50,24 45,28 47,22 42,18 48,18" fill="#FFE0A0"/>
-          <ellipse cx="40" cy="50" rx="6" ry="7" fill="#fff"/><ellipse cx="60" cy="50" rx="6" ry="7" fill="#fff"/>
-          <circle cx="41" cy="51" r="3.5" fill="var(--ink)"/><circle cx="61" cy="51" r="3.5" fill="var(--ink)"/>
-          <circle cx="43" cy="49" r="1.5" fill="#fff"/><circle cx="63" cy="49" r="1.5" fill="#fff"/>
-          <path d="M34 46 Q40 42 46 46" stroke="var(--ink)" stroke-width="1.5" fill="none" stroke-linecap="round"/>
-          <path d="M54 46 Q60 42 66 46" stroke="var(--ink)" stroke-width="1.5" fill="none" stroke-linecap="round"/>
-          <path d="M42 60 Q50 70 58 60" stroke="var(--ink)" stroke-width="1.5" fill="none" stroke-linecap="round"/>
-          <ellipse cx="33" cy="58" rx="5" ry="3" fill="#FFB8B8" opacity="0.7"/><ellipse cx="67" cy="58" rx="5" ry="3" fill="#FFB8B8" opacity="0.7"/>
-        </svg>
-        <div class="sprite-label">答对</div>
-      </div>
-      <div class="sprite-wrap">
-        <svg width="64" height="64" viewBox="0 0 100 100">
-          <defs><linearGradient id="mgs" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#FFD4D4"/><stop offset="100%" stop-color="#FF6B6B"/></linearGradient></defs>
-          <circle cx="50" cy="52" r="42" fill="var(--wrong)" opacity="0.12"/>
-          <circle cx="50" cy="58" r="28" fill="url(#mgs)"/><ellipse cx="50" cy="63" rx="18" ry="14" fill="#fff" opacity="0.12"/>
-          <polygon points="50,11 36,35 64,35" fill="var(--ember)" opacity="0.7"/><rect x="33" y="33" width="34" height="5" rx="2.5" fill="var(--ember)" opacity="0.5"/>
-          <polygon points="50,15 52,21 58,21 53,25 55,31 50,27 45,31 47,25 42,21 48,21" fill="#FFE0A0" opacity="0.7"/>
-          <ellipse cx="40" cy="53" rx="6" ry="7" fill="#fff"/><ellipse cx="60" cy="53" rx="6" ry="7" fill="#fff"/>
-          <circle cx="41" cy="54" r="3.5" fill="var(--ink)"/><circle cx="61" cy="54" r="3.5" fill="var(--ink)"/>
-          <circle cx="43" cy="52" r="1.5" fill="#fff"/><circle cx="63" cy="52" r="1.5" fill="#fff"/>
-          <path d="M34 48 Q40 44 46 48" stroke="var(--ink)" stroke-width="1.5" fill="none" stroke-linecap="round"/>
-          <path d="M54 48 Q60 44 66 48" stroke="var(--ink)" stroke-width="1.5" fill="none" stroke-linecap="round"/>
-          <path d="M44 67 Q50 62 56 67" stroke="var(--ink)" stroke-width="1.5" fill="none" stroke-linecap="round"/>
-          <ellipse cx="33" cy="61" rx="5" ry="3" fill="#FFB8B8" opacity="0.4"/><ellipse cx="67" cy="61" rx="5" ry="3" fill="#FFB8B8" opacity="0.4"/>
-        </svg>
-        <div class="sprite-label">答错</div>
-      </div>
-      <div class="sprite-wrap">
-        <svg class="mascot-bounce" width="64" height="64" viewBox="0 0 100 100">
-          <defs><linearGradient id="mgc" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#FFE0A0"/><stop offset="100%" stop-color="#FF8C42"/></linearGradient></defs>
-          <circle cx="50" cy="52" r="42" fill="var(--ember)" opacity="0.2"/>
-          <circle cx="50" cy="55" r="28" fill="url(#mgc)"/><ellipse cx="50" cy="60" rx="18" ry="14" fill="#fff" opacity="0.2"/>
-          <polygon points="50,8 36,32 64,32" fill="var(--spell)"/><rect x="33" y="30" width="34" height="5" rx="2.5" fill="var(--spell)" opacity="0.8"/>
-          <polygon points="50,12 52,18 58,18 53,22 55,28 50,24 45,28 47,22 42,18 48,18" fill="#fff" opacity="0.9"/>
-          <text x="34" y="55" font-size="14" text-anchor="middle" fill="var(--ink)">★</text>
-          <text x="66" y="55" font-size="14" text-anchor="middle" fill="var(--ink)">★</text>
-          <path d="M40 60 Q50 72 60 60" stroke="var(--ink)" stroke-width="2" fill="none" stroke-linecap="round"/>
-          <ellipse cx="33" cy="58" rx="5" ry="3" fill="#FFB8B8" opacity="0.6"/><ellipse cx="67" cy="58" rx="5" ry="3" fill="#FFB8B8" opacity="0.6"/>
-          <circle cx="15" cy="20" r="3" fill="var(--spell)" opacity="0.7"><animate attributeName="cy" values="20;80" dur="2s" repeatCount="indefinite"/><animate attributeName="opacity" values="0.7;0" dur="2s" repeatCount="indefinite"/></circle>
-          <circle cx="85" cy="25" r="2" fill="var(--ember)" opacity="0.6"><animate attributeName="cy" values="25;85" dur="1.8s" repeatCount="indefinite"/><animate attributeName="opacity" values="0.6;0" dur="1.8s" repeatCount="indefinite"/></circle>
-        </svg>
-        <div class="sprite-label">庆祝</div>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- ═══ 8. 按钮组件 ═══ -->
-<section class="showcase">
-  <div class="showcase-title">按钮组件</div>
-  <div class="showcase-body">
-    <div class="showcase-section">
-      <div class="showcase-label">主按钮</div>
-      <button class="btn-primary">开始闯关</button>
-    </div>
-    <div class="showcase-section">
-      <div class="showcase-label">主按钮（禁用）</div>
-      <button class="btn-primary" disabled>确认答案</button>
-    </div>
-    <div class="showcase-section">
-      <div class="showcase-label">次按钮</div>
-      <button class="btn-secondary">回到首页</button>
-    </div>
-    <div class="showcase-section">
-      <div class="showcase-label">描边按钮</div>
-      <div style="display:flex; gap:8px;">
-        <button class="btn-outline">📄 粘贴文档</button>
-        <button class="btn-outline">🔗 输入链接</button>
-      </div>
-    </div>
-    <div class="showcase-section">
-      <div class="showcase-label">文字链接</div>
-      <span class="btn-text-link">📤 分享成绩给朋友</span>
-    </div>
-  </div>
-</section>
-
-<!-- ═══ 9. 其他组件 ═══ -->
-<section class="showcase">
-  <div class="showcase-title">其他组件</div>
-  <div class="showcase-body">
-    <div class="showcase-section">
-      <div class="showcase-label">鼓励条</div>
-      <div class="encourage-bar">
-        <svg class="ic ic-sm" style="color:var(--ember)"><use href="#ic-sparkles"/></svg>
-        已连对 3 题，保持住！
-      </div>
-    </div>
-    <div class="showcase-section">
-      <div class="showcase-label">AI 总结卡片</div>
-      <div class="summary-card">
-        你对三国基础知识掌握不错，但赤壁之战的时间和具体地点还需要再记一下。
-      </div>
-    </div>
-    <div class="showcase-section">
-      <div class="showcase-label">推荐主题卡片</div>
-      <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
-        <div class="topic-card">
-          <div class="topic-icon t-history">
-            <svg class="ic ic-md"><use href="#ic-graduation"/></svg>
+  <h1 class="prototype-title">知识闯关 · 当前项目组件状态</h1>
+  <p class="prototype-note">仅收录当前代码中真实存在的组件与状态；尺寸按项目 750rpx → 原型 375px 映射。</p>
+  <main class="prototype-grid">
+    <section class="phone">
+      <div class="screen-label">组件 1 · 基础与输入</div>
+      <header class="native-nav">基础组件</header>
+      <div class="scroll" style="padding-bottom:24px">
+        <div class="section">
+          <div class="section-header">当前色彩</div>
+          <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px">
+            <div style="height:64px;border-radius:12px;background:#3D2C5E;color:#fff;padding:8px;font-size:11px">Ink<br>#3D2C5E</div>
+            <div style="height:64px;border-radius:12px;background:#7C5CFC;color:#fff;padding:8px;font-size:11px">Spell<br>#7C5CFC</div>
+            <div style="height:64px;border-radius:12px;background:#FBF7F0;border:1px solid #ddd;padding:8px;font-size:11px">背景<br>#FBF7F0</div>
+            <div style="height:64px;border-radius:12px;background:#3EC9A0;color:#fff;padding:8px;font-size:11px">正确</div>
+            <div style="height:64px;border-radius:12px;background:#FF6B6B;color:#fff;padding:8px;font-size:11px">错误</div>
+            <div style="height:64px;border-radius:12px;background:#FF8C42;color:#fff;padding:8px;font-size:11px">提示</div>
           </div>
-          <div class="topic-title">十分钟搞懂三国人物关系</div>
-          <div class="topic-meta">历史 · 人物关系一网打尽</div>
+          <div class="section-header">内容输入</div>
         </div>
-        <div class="topic-card">
-          <div class="topic-icon t-science">
-            <svg class="ic ic-md"><use href="#ic-star"/></svg>
-          </div>
-          <div class="topic-title">太阳系的八大行星</div>
-          <div class="topic-meta">科学 · 基础天文速览</div>
+        <div class="input-area">
+          <div class="input-box"><img class="lead" src="../src/assets/ui-icons/search.png" alt=""><div class="textarea">输入主题，或粘贴一段学习内容…</div></div>
+          <div class="input-actions"><span class="input-action"><img src="../src/assets/ui-icons/file-text.png" alt="">选择 .txt / .md</span><span class="input-action active"><img src="../src/assets/ui-icons/link.png" alt="">输入网页链接</span></div>
+          <div class="input-note">网页会读取公开正文；私人链接与内网地址不会访问</div>
         </div>
+        <button class="btn-primary">开始闯关</button>
+        <div style="padding:10px 20px"><button class="btn-secondary">回到首页</button></div>
+        <button class="btn-primary disabled" disabled>正在生成新题...</button>
       </div>
-    </div>
-    <div class="showcase-section">
-      <div class="showcase-label">答对反馈卡片</div>
-      <div class="feedback-card correct-fb">
-        <div class="feedback-title">答对了！</div>
-        <div class="feedback-body">蜀汉是刘备于公元 221 年在成都建立的政权。</div>
-      </div>
-    </div>
-    <div class="showcase-section">
-      <div class="showcase-label">答错反馈卡片</div>
-      <div class="feedback-card wrong-fb">
-        <div class="feedback-title">差一点！</div>
-        <div class="feedback-body">正确答案是蜀汉，不是东吴。东吴由孙权建立。</div>
-      </div>
-    </div>
-    <div class="showcase-section">
-      <div class="showcase-label">历史记录卡片</div>
-      <div class="history-card">
-        <div class="history-card-top">
-          <span class="history-card-trophy">
-            <svg class="ic ic-lg" style="color:var(--ember)"><use href="#ic-trophy"/></svg>
-          </span>
-          <span class="history-card-topic">三国人物关系</span>
-          <span style="font-size:15px; font-weight:700; color:var(--correct);">85%</span>
-        </div>
-        <div class="history-card-stats">
-          <svg class="ic ic-sm"><use href="#ic-notebook"/></svg>
-          10 题 · 正确 8 题
-          <svg class="ic ic-sm"><use href="#ic-clock"/></svg>
-          5 分 32 秒
-        </div>
-        <div class="history-card-divider"></div>
-        <div class="history-card-action">再次挑战 →</div>
-      </div>
-    </div>
-    <div class="showcase-section">
-      <div class="showcase-label">输入框</div>
-      <div class="input-box">
-        <svg class="ic ic-md" style="color:var(--ink-light)"><use href="#ic-search"/></svg>
-        <input type="text" placeholder="输入主题、粘贴文字或链接…" />
-      </div>
-    </div>
-    <div class="showcase-section">
-      <div class="showcase-label">分隔标题</div>
-      <div class="section-header">翻一页试试</div>
-    </div>
-    <div class="showcase-section">
-      <div class="showcase-label">继续闯关卡片</div>
-      <div style="padding:14px 16px;display:flex;align-items:center;gap:14px;background:linear-gradient(135deg, rgba(124,92,252,0.12), rgba(184,169,255,0.06));border:1.5px solid rgba(124,92,252,0.18);border-radius:var(--radius-card);">
-        <div style="width:40px;height:40px;border-radius:12px;background:rgba(124,92,252,0.12);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
-          <svg class="ic ic-md" style="color:var(--spell)"><use href="#ic-history"/></svg>
-        </div>
-        <div style="flex:1;min-width:0;">
-          <div style="font-size:11px;color:var(--spell);font-weight:700;">未完成的闯关</div>
-          <div style="font-size:14px;font-weight:700;color:var(--ink);margin-top:2px;">三国人物关系</div>
-          <div style="font-size:12px;color:var(--ink-light);margin-top:2px;">已完成 3 / 10 题</div>
-        </div>
-        <div style="flex-shrink:0;color:var(--spell);font-size:13px;font-weight:700;">继续 →</div>
-      </div>
-    </div>
-    <div class="showcase-section">
-      <div class="showcase-label">底部标签栏</div>
-      <div style="display:flex;border-top:1px solid rgba(61,44,94,0.08);background:var(--card);border-radius:0 0 12px 12px;overflow:hidden;">
-        <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;padding:10px 0;font-size:11px;color:var(--spell);">
-          <svg class="ic ic-lg" style="color:inherit"><use href="#ic-home"/></svg>
-          首页
-        </div>
-        <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;padding:10px 0;font-size:11px;color:var(--ink-light);">
-          <svg class="ic ic-lg" style="color:inherit"><use href="#ic-history"/></svg>
-          记录
-        </div>
-        <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;padding:10px 0;font-size:11px;color:var(--ink-light);">
-          <svg class="ic ic-lg" style="color:inherit"><use href="#ic-user"/></svg>
-          我的
-        </div>
-      </div>
-    </div>
-  </div>
-</section>
+    </section>
 
+    <section class="phone">
+      <div class="screen-label">组件 2 · 答题状态</div>
+      <header class="quiz-nav"><span class="back">← 退出</span><span class="progress-text">第 3 关 / 共 10 关</span><div class="progress"><i style="width:30%"></i></div></header>
+      <div class="quiz-scroll">
+        <div class="question">选项卡片的四种真实状态</div>
+        <div class="options">
+          <div class="option"><span class="letter">A</span><span class="option-text">默认状态</span></div>
+          <div class="option selected"><span class="letter">B</span><span class="option-text">已选择</span><span class="check">✓</span></div>
+          <div class="option correct"><span class="letter">C</span><span class="option-text">正确答案</span><span class="check">✓</span></div>
+          <div class="option wrong"><span class="letter">D</span><span class="option-text">错误选择</span><span class="check">✗</span></div>
+        </div>
+        <div class="encourage">✨ 已连对 3 题，保持住！</div>
+      </div>
+      <footer class="quiz-bottom"><button class="btn-primary full">确认答案</button></footer>
+    </section>
+
+    <section class="phone">
+      <div class="screen-label">组件 3 · 反馈与报告</div>
+      <header class="report-nav">反馈状态</header>
+      <div class="scroll">
+        <div class="feedback-mascot"><img src="../src/assets/mascot/knowledge-robot.png" alt="知识机器人"></div>
+        <article class="feedback correct"><h2>✓ 答对了！</h2><p class="explain">💡 这里显示当前题目的解释。</p></article>
+        <article class="feedback wrong"><h2>✗ 差一点！</h2><p>你的答案：<span style="color:var(--wrong)">错误选项</span><br>正确答案：<b style="color:var(--correct)">正确选项</b></p><p class="explain">💡 这里显示当前题目的解释。</p></article>
+        <section class="review"><div class="review-toggle"><span>错题回顾</span><span>收起 ↑</span></div><div class="review-card"><b>这是一道答错的题目</b><span class="bad">你的答案：B</span><br><span class="good">正确答案：A</span><br>💡 题目解释</div></section>
+        <div class="summary">AI 总结卡片使用绝对定位标签，内容来自报告接口。</div>
+      </div>
+    </section>
+
+    <section class="phone">
+      <div class="screen-label">组件 4 · 记录与继续</div>
+      <header class="native-nav">记录组件</header>
+      <div class="scroll">
+        <div class="resume-card" style="margin-top:16px"><div class="resume-copy"><b>未完成的闯关</b><span>三国人物关系</span><small>已完成 3 / 10 题</small></div><span class="resume-go">继续 →</span></div>
+        <div class="search">🔍 <span>搜索学过的主题…</span></div>
+        <article class="history-card"><div class="history-top"><span>🏆</span><strong>三国人物关系</strong><b style="color:var(--correct)">85%</b></div><div class="history-stats"><span>📝 10 题</span><span>⏱️ 3分20秒</span></div><div class="history-actions"><span>查看报告</span><span>再次挑战 🔄</span><span class="delete">删除</span></div></article>
+        <div class="empty"><div class="icon">📖</div><h3>还没有学习记录</h3><p>输入一个主题，开始你的第一次闯关吧</p></div>
+      </div>
+    </section>
+
+    <section class="phone">
+      <div class="screen-label">组件 5 · 资料与系统提示</div>
+      <header class="native-nav">我的</header>
+      <div class="scroll">
+        <div class="user-card"><div class="avatar"><img src="../src/assets/mascot/knowledge-robot.png" alt=""></div><h2>知识探索者</h2><p>点击头像可更换</p></div>
+        <section class="profile-edit"><h3>个人资料</h3><div class="nickname">知识探索者</div><div class="save">保存昵称</div><p class="privacy">微信不会在登录时自动提供头像和昵称，请在此主动选择并保存。</p></section>
+        <div class="section"><div class="section-header">系统反馈</div></div>
+        <div style="margin:0 20px 12px;padding:14px;border-radius:12px;background:#fff;text-align:center;font-size:13px">Toast：文档已读取</div>
+        <div style="margin:0 20px;padding:14px;border-radius:12px;background:#fff;font-size:12px;line-height:1.6"><b>Modal：确认退出</b><br><span style="color:var(--ink-light)">进度会自动保存，你可以稍后继续</span><div style="display:flex;gap:8px;margin-top:10px"><span style="flex:1;text-align:center;color:var(--ink-light)">取消</span><span style="flex:1;text-align:center;color:var(--spell);font-weight:700">确定</span></div></div>
+      </div>
+    </section>
+  </main>
 </body>
 </html>

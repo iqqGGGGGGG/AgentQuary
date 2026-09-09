@@ -5,6 +5,9 @@ export default defineAppConfig({
     'pages/report/report',
     'pages/history/history',
     'pages/profile/profile',
+    'pages/wrong-book/wrong-book',
+    'pages/preferences/preferences',
+    'pages/achievements/achievements',
   ],
   tabBar: {
     color: '#8B7FA3',
