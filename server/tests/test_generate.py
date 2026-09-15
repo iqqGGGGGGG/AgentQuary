@@ -51,7 +51,7 @@ async def test_generate_quiz_empty_content(client):
 async def test_generate_quiz_count_out_of_range(client):
     resp = await client.post("/api/generate", json={
         "content": "测试内容",
-        "question_count": 3,
+        "question_count": 0,
     })
     assert resp.status_code == 422
 

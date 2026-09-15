@@ -7,6 +7,9 @@ export interface Question {
   options: string[]
   answer: number
   explanation: string
+  image_url?: string | null
+  needs_image?: boolean
+  image_prompt?: string | null
 }
 
 export interface GenerateResponse {
@@ -22,6 +25,10 @@ export interface GenerateResponse {
 export interface GenerateRequest {
   content: string
   question_count?: number
+  excluded_questions?: string[]
+  generate_images?: boolean
+  feedback?: string
+  previous_questions?: string[]
 }
 
 export interface UserAnswer {

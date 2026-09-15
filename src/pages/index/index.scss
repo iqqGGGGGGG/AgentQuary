@@ -226,6 +226,54 @@
   border-color: rgba(124, 92, 252, 0.14);
 }
 
+// ── Image generation toggle ──
+
+.option-row {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin: 0 40px 16px;
+  padding: 16px 20px;
+  background: var(--card);
+  border-radius: var(--radius-card);
+  border: 1.5px solid rgba(124, 92, 252, 0.06);
+}
+
+.toggle {
+  width: 80px;
+  height: 44px;
+  border-radius: 22px;
+  background: rgba(61, 44, 94, 0.12);
+  position: relative;
+  transition: background 0.2s;
+  flex-shrink: 0;
+}
+
+.toggle-on {
+  background: var(--spell);
+}
+
+.toggle-dot {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: #fff;
+  position: absolute;
+  top: 4px;
+  left: 4px;
+  transition: transform 0.2s;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+}
+
+.toggle-on .toggle-dot {
+  transform: translateX(36px);
+}
+
+.option-label {
+  font-size: 26px;
+  color: var(--ink);
+}
+
 .index-page > .btn-primary {
   position: relative;
   overflow: hidden;

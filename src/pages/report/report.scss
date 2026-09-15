@@ -275,3 +275,110 @@
 
   &::after { border: 0; }
 }
+
+// ── Feedback Panel ──
+
+.feedback-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: flex-end;
+  z-index: 100;
+}
+
+.feedback-panel {
+  width: 100%;
+  background: #fff;
+  border-radius: 32px 32px 0 0;
+  padding: 40px;
+  box-sizing: border-box;
+}
+
+.feedback-title {
+  display: block;
+  font-size: 34px;
+  font-weight: 700;
+  color: var(--ink);
+  text-align: center;
+  margin-bottom: 8px;
+}
+
+.feedback-subtitle {
+  display: block;
+  font-size: 24px;
+  color: var(--ink-light);
+  text-align: center;
+  margin-bottom: 28px;
+}
+
+.feedback-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.feedback-custom {
+  margin-bottom: 24px;
+}
+
+.feedback-custom-input {
+  width: 100%;
+  padding: 18px 24px;
+  font-size: 26px;
+  border: 1.5px solid rgba(124, 92, 252, 0.2);
+  border-radius: 16px;
+  box-sizing: border-box;
+  background: rgba(61, 44, 94, 0.02);
+
+  &:focus {
+    border-color: var(--spell);
+  }
+}
+
+.feedback-option {
+  padding: 14px 24px;
+  border-radius: 99px;
+  border: 1.5px solid rgba(124, 92, 252, 0.2);
+  background: #fff;
+  transition: all 0.15s;
+}
+
+.feedback-option-selected {
+  background: var(--spell);
+  border-color: var(--spell);
+
+  .feedback-option-text {
+    color: #fff;
+  }
+}
+
+.feedback-option-text {
+  font-size: 26px;
+  color: var(--ink);
+}
+
+.feedback-actions {
+  display: flex;
+  gap: 16px;
+}
+
+.feedback-btn {
+  flex: 1;
+  padding: 22px;
+  border-radius: 99px;
+  text-align: center;
+  font-size: 28px;
+  font-weight: 600;
+}
+
+.feedback-btn-skip {
+  background: rgba(61, 44, 94, 0.06);
+  color: var(--ink-light);
+}
+
+.feedback-btn-submit {
+  background: linear-gradient(135deg, var(--spell), var(--spell-glow));
+  color: #fff;
+}

@@ -197,6 +197,14 @@ export default function Quiz() {
       {/* Question */}
       <View className='question-area'>
         <Text className='question-text'>{q.question}</Text>
+        {q.image_url && (
+          <Image
+            className='question-image'
+            src={q.image_url}
+            mode='aspectFit'
+            onClick={() => Taro.previewImage({ urls: [q.image_url!], current: q.image_url! })}
+          />
+        )}
       </View>
 
       {/* Options */}

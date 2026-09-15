@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import Taro, { useRouter, useShareAppMessage } from '@tarojs/taro'
-import { Button, View, Text, Image } from '@tarojs/components'
+import { Button, View, Text, Image, Input } from '@tarojs/components'
 import { getQuizResult, setCurrentQuiz, setQuizResult, setPendingAchievements } from '../../store/quiz'
 import { api } from '../../services/api'
 import { clearQuizProgress, getHistory, saveHistory, saveQuizProgress } from '../../utils/storage'
@@ -16,6 +16,9 @@ export default function Report() {
   const [showWrongReview, setShowWrongReview] = useState(false)
   const [retrying, setRetrying] = useState(false)
   const [summaryLoading, setSummaryLoading] = useState(true)
+  const [showFeedback, setShowFeedback] = useState(false)
+  const [feedbackText, setFeedbackText] = useState('')
+  const [customFeedback, setCustomFeedback] = useState('')
   const router = useRouter()
   const fromHistory = router.params.from === 'history'
 
@@ -101,16 +104,36 @@ export default function Report() {
     }).catch(() => { setSummaryLoading(false) })
   }, [])
 
-  const handleRetry = async () => {
+  const handleRetry = () => {
     if (!result || retrying) return
+    setShowFeedback(true)
+  }
+
+  const handleFeedbackSelect = (feedback: string) => {
+    setFeedbackText(feedback)
+    setCustomFeedback('')
+  }
+
+  const getFinalFeedback = () => {
+    if (customFeedback.trim()) return customFeedback.trim()
+    return feedbackText
+  }
+
+  const handleRetryWithFeedback = async (feedback: string) => {
+    if (!result || retrying) return
+    setShowFeedback(false)
     setRetrying(true)
     Taro.showLoading({ title: '正在生成新题...' })
     try {
       const sourceContent = result.source_content?.trim() || result.topic
+      const previousQuestions = result.questions.map(q => q.question)
       const generated = await api.generate(
         sourceContent,
         result.total_count,
-        result.questions.map(question => question.question),
+        previousQuestions,
+        false,
+        feedback,
+        previousQuestions,
       )
       const quiz = { ...generated, source_content: sourceContent }
       setCurrentQuiz(quiz)
@@ -289,6 +312,43 @@ export default function Report() {
           <Text>📤 分享成绩给朋友</Text>
         </Button>
       </View>
+
+      {/* Feedback Panel */}
+      {showFeedback && (
+        <View className='feedback-overlay' onClick={() => setShowFeedback(false)}>
+          <View className='feedback-panel' onClick={e => e.stopPropagation()}>
+            <Text className='feedback-title'>对这批题目满意吗？</Text>
+            <Text className='feedback-subtitle'>你的反馈会帮助生成更好的题目</Text>
+            <View className='feedback-options'>
+              {['太简单了', '太难了', '题目不相关', '想要更多配图', '题目质量不好'].map(opt => (
+                <View
+                  key={opt}
+                  className={`feedback-option ${feedbackText === opt ? 'feedback-option-selected' : ''}`}
+                  onClick={() => handleFeedbackSelect(opt)}
+                >
+                  <Text className='feedback-option-text'>{opt}</Text>
+                </View>
+              ))}
+            </View>
+            <View className='feedback-custom'>
+              <Input
+                className='feedback-custom-input'
+                placeholder='或者输入你的具体反馈...'
+                value={customFeedback}
+                onInput={e => { setCustomFeedback(e.detail.value); setFeedbackText('') }}
+              />
+            </View>
+            <View className='feedback-actions'>
+              <View className='feedback-btn feedback-btn-skip' onClick={() => handleRetryWithFeedback('')}>
+                <Text>跳过</Text>
+              </View>
+              <View className='feedback-btn feedback-btn-submit' onClick={() => handleRetryWithFeedback(getFinalFeedback())}>
+                <Text>提交并生成</Text>
+              </View>
+            </View>
+          </View>
+        </View>
+      )}
     </View>
   )
 }

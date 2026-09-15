@@ -28,6 +28,11 @@ class Settings(BaseSettings):
     embedding_model: str = "text-embedding-v4"
     embedding_api_key: str = ""
 
+    cos_bucket: str = "gqq-agent-1310553153"
+    cos_region: str = "ap-beijing"
+    cos_secret_id: str = ""
+    cos_secret_key: str = ""
+
     model_config = {"env_file": ".env", "env_file_encoding": "utf-8"}
 
     @property

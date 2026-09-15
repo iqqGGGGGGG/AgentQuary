@@ -52,11 +52,14 @@ async function request<T>(method: 'GET' | 'POST' | 'PUT' | 'DELETE', path: strin
 }
 
 export const api = {
-  generate: (content: string, count = 10, excludedQuestions: string[] = []) =>
+  generate: (content: string, count = 5, excludedQuestions: string[] = [], generateImages = false, feedback = '', previousQuestions: string[] = []) =>
     request<GenerateResponse>('POST', '/api/generate', {
       content,
       question_count: count,
       excluded_questions: excludedQuestions,
+      generate_images: generateImages,
+      feedback,
+      previous_questions: previousQuestions,
     }, 300000),
 
   report: (data: ReportRequest) =>

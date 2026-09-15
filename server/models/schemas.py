@@ -10,6 +10,9 @@ class Question(BaseModel):
     options: list[str]
     answer: int = Field(ge=0)
     explanation: str
+    image_url: str | None = None
+    needs_image: bool = False
+    image_prompt: str | None = None
 
     @model_validator(mode="after")
     def validate_options_and_answer(self):
@@ -23,8 +26,11 @@ class Question(BaseModel):
 
 class GenerateRequest(BaseModel):
     content: str = Field(min_length=1, max_length=12_000)
-    question_count: int = Field(default=10, ge=5, le=20)
+    question_count: int = Field(default=5, ge=1, le=20)
     excluded_questions: list[str] = Field(default_factory=list, max_length=100)
+    generate_images: bool = False
+    feedback: str = ""
+    previous_questions: list[str] = Field(default_factory=list)
 
     @field_validator("content")
     @classmethod

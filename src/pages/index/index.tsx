@@ -64,6 +64,7 @@ export default function Index() {
   const [activeProgress, setActiveProgress] = useState<QuizProgress | null>(null)
   const [clarificationOptions, setClarificationOptions] = useState<string[]>([])
   const [clarificationLoading, setClarificationLoading] = useState(false)
+  const [generateImages, setGenerateImages] = useState(false)
 
   useEffect(() => {
     api.examples().then(res => {
@@ -118,7 +119,7 @@ export default function Index() {
       if (cleanContent.length > 12000) {
         throw new Error('内容超过 12000 字，请截取最需要学习的部分')
       }
-      const generated = await api.generate(cleanContent)
+      const generated = await api.generate(cleanContent, 5, [], generateImages)
       if (generated.needs_clarification && generated.domain_options?.length) {
         Taro.hideLoading()
         setClarificationOptions(generated.domain_options)
@@ -293,6 +294,14 @@ export default function Index() {
           <Text className='resume-action'>继续 →</Text>
         </View>
       )}
+
+      {/* Image Generation Toggle */}
+      <View className='option-row' onClick={() => setGenerateImages(!generateImages)}>
+        <View className={`toggle ${generateImages ? 'toggle-on' : ''}`}>
+          <View className='toggle-dot' />
+        </View>
+        <Text className='option-label'>生成题目配图</Text>
+      </View>
 
       {/* Start Button */}
       <View className='btn-primary' onClick={handleStart}>
